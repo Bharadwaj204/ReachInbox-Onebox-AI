@@ -995,8 +995,17 @@
     </div>
 
     <script>
-        // API base URL
-        const API_BASE = '/api/emails';
+        // API base URL - Update this to point to your backend API
+        // For local development:
+        // const API_BASE = '/api/emails';
+        
+        // For Vercel frontend with separate backend:
+        // Update this to your actual backend URL after deployment
+        const API_BASE = 'https://your-backend-domain.com/api/emails';
+        
+        // Dynamic API base URL - automatically use local API when running locally
+        // Uncomment the following line to use automatic detection:
+        // const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? '/api/emails' : 'https://your-backend-domain.com/api/emails';
         
         // DOM elements
         const searchInput = document.getElementById('searchInput');

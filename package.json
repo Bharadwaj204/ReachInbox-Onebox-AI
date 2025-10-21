@@ -9,7 +9,8 @@
     "dev": "ts-node src/server.ts",
     "test": "jest",
     "test-all": "node test-all.js",
-    "test-comprehensive": "node test-comprehensive.js"
+    "test-comprehensive": "node test-comprehensive.js",
+    "postinstall": "npm run build"
   },
   "keywords": [
     "email",
@@ -36,5 +37,8 @@
     "@types/node": "^20.19.22",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": "18.x"
   }
 }

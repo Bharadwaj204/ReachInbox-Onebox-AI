@@ -2,17 +2,18 @@
 
 ## Prerequisites
 
-1. A Heroku account
-2. A GitHub account
-3. Access to managed Elasticsearch and Qdrant services (or self-hosted instances)
+1. A Heroku account (for Heroku deployment)
+2. A Render account (for Render deployment)
+3. A GitHub account
+4. Access to managed Elasticsearch and Qdrant services (or self-hosted instances)
 
 ## Deployment Steps
 
 ### 1. Prepare Environment Variables
 
-Before deploying, you'll need to configure the following environment variables in your Heroku app:
+Before deploying, you'll need to configure the following environment variables in your deployment platform:
 
-```
+``env
 # IMAP Configuration
 IMAP_HOST_1=imap.gmail.com
 IMAP_PORT_1=993
@@ -86,6 +87,108 @@ If you prefer to use Docker:
    ```bash
    heroku container:release web
    ```
+
+### 4. Deploy to Render
+
+Render is a unified cloud platform that makes it easy to build and run all your apps and websites with free TLS certificates, a global CDN, DDoS protection, private networks, and auto-deploys from Git.
+
+#### Prerequisites for Render
+
+1. Create a Render account at [render.com](https://render.com)
+2. Connect your GitHub account to Render
+3. Set up managed services for Elasticsearch and Qdrant (see below)
+
+#### Deployment Steps for Render
+
+1. **Prepare External Services**:
+   - For Elasticsearch, sign up for [Elastic Cloud](https://cloud.elastic.co/) or use another managed service
+   - For Qdrant, sign up for [Qdrant Cloud](https://qdrant.tech/cloud/) or use another managed service
+
+2. **Fork or Push Your Repository**:
+   - Fork this repository to your GitHub account or push it to a new GitHub repository
+
+3. **Deploy to Render**:
+   - Go to your Render Dashboard
+   - Click "New +" and select "Web Service"
+   - Connect your GitHub repository
+   - Configure the service:
+     - Name: `reachinbox-onebox-ai`
+     - Environment: `Node`
+     - Build Command: `npm run build`
+     - Start Command: `npm start`
+     - Instance Type: `Starter` (or higher for production)
+
+4. **Configure Environment Variables**:
+   In the Render dashboard, go to your service settings and add all environment variables:
+   - `IMAP_HOST_1`, `IMAP_PORT_1`, `IMAP_USER_1`, `IMAP_PASSWORD_1`, etc.
+   - `ELASTICSEARCH_HOST` and `ELASTICSEARCH_PORT` (from your managed service)
+   - `QDRANT_HOST` and `QDRANT_PORT` (from your managed service)
+   - `GEMINI_API_KEY`
+   - Optional: `SLACK_WEBHOOK_URL`, `EXTERNAL_WEBHOOK_URL`
+
+5. **Deploy**:
+   - Click "Create Web Service"
+   - Render will automatically build and deploy your application
+   - The application will be available at `https://your-app-name.onrender.com`
+
+## Render-Specific Configuration
+
+### Environment Variables on Render
+
+Render allows you to set environment variables in the dashboard:
+1. Go to your service in the Render dashboard
+2. Click "Environment" in the sidebar
+3. Add each variable from your [.env](file:///C:/Users/91939/Desktop/onebox/.env) file with the appropriate values
+4. Make sure to use the connection details for your managed Elasticsearch and Qdrant services
+
+### Important Render Configuration
+
+Render automatically sets the `PORT` environment variable, which your application already respects.
+
+For persistent connections to work properly on Render:
+- Use the "Starter" tier or higher (free tier may restart your application periodically)
+- Consider adding a cron job to periodically check and re-establish IMAP connections if needed
+
+### Render Service Configuration
+
+Your application includes a [render.yaml](file:///C:/Users/91939/Desktop/onebox/render.yaml) file that defines the service configuration:
+
+```yaml
+services:
+  - type: web
+    name: reachinbox-onebox-ai
+    env: node
+    buildCommand: npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: 18
+      - key: PORT
+        value: 3000
+```
+
+This configuration tells Render how to build and run your application.
+
+### Auto-Deploy with Render
+
+Render automatically deploys your application when you push changes to your connected GitHub repository. To set this up:
+
+1. Connect your GitHub repository to Render
+2. Configure auto-deploy in the Render dashboard
+3. Any push to the main branch will trigger a new deployment
+
+### Custom Domain on Render
+
+To use a custom domain with your Render application:
+
+1. In the Render dashboard, go to your service settings
+2. Click "Settings" then "Custom Domains"
+3. Add your domain name
+4. Follow the instructions to configure DNS records with your domain provider
+
+### SSL Certificates
+
+Render automatically provides free SSL certificates for all services with custom domains. No additional configuration is needed.
 
 ## External Services Setup
 

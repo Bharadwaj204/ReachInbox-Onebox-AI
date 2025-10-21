@@ -53,6 +53,15 @@ app.get('/health', (req: Request, res: Response) => {
   });
 });
 
+// Simple ping endpoint for Render health checks
+app.get('/ping', (req: Request, res: Response) => {
+  res.json({ 
+    message: 'pong',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});
+
 // Serve frontend
 app.use(express.static('public'));
 app.get('/', (req: Request, res: Response) => {
