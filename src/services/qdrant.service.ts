@@ -32,6 +32,11 @@ export class QdrantService {
     this.testConnection();
   }
 
+  // Getter for isConnected status
+  public getIsConnected(): boolean {
+    return this.isConnected;
+  }
+
   private async testConnection(): Promise<void> {
     try {
       // Configure axios with API key if available
