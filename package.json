@@ -10,7 +10,8 @@
     "test": "jest",
     "test-all": "node test-all.js",
     "test-comprehensive": "node test-comprehensive.js",
-    "postinstall": "npm run build"
+    "postinstall": "npm run build",
+    "health": "node health-check.js"
   },
   "keywords": [
     "email",
