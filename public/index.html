@@ -1,0 +1,1616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReachInbox Onebox AI</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4361ee;
+            --primary-dark: #3a0ca3;
+            --secondary: #7209b7;
+            --success: #4cc9f0;
+            --danger: #f72585;
+            --warning: #f8961e;
+            --info: #4895ef;
+            --dark: #1a1a2e;
+            --darker: #0d0d1a;
+            --light: #f8f9fa;
+            --gray-100: #f1f3f9;
+            --gray-200: #e2e8f0;
+            --gray-300: #cbd5e1;
+            --gray-400: #94a3b8;
+            --gray-500: #64748b;
+            --gray-600: #475569;
+            --gray-700: #334155;
+            --gray-800: #1e293b;
+            --gray-900: #0f172a;
+            --sidebar-width: 320px; /* Increased from 280px */
+            --details-width: 45%;
+            --header-height: 70px;
+            --transition: all 0.3s ease;
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 16px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            background-color: #f5f7ff;
+            color: var(--gray-800);
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        /* Header Styles */
+        .app-header {
+            background: linear-gradient(90deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 0 24px;
+            height: var(--header-height);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: var(--shadow-md);
+            z-index: 100;
+        }
+
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .logo {
+            background: white;
+            color: var(--primary);
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 20px;
+        }
+
+        .brand-info h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 2px;
+        }
+
+        .brand-info p {
+            font-size: 0.85rem;
+            opacity: 0.9;
+            font-weight: 400;
+        }
+
+        .header-status {
+            display: flex;
+            gap: 12px;
+        }
+
+        .status-pill {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #4ade80;
+        }
+
+        /* Main Content Layout */
+        .main-content {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Resizable divider */
+        .divider {
+            width: 5px;
+            background: var(--gray-300);
+            cursor: col-resize;
+            position: relative;
+            z-index: 20;
+            transition: background 0.2s ease;
+        }
+
+        .divider:hover {
+            background: var(--primary);
+        }
+
+        .divider::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 1px;
+            width: 3px;
+            height: 40px;
+            background: var(--gray-400);
+            border-radius: 2px;
+            transform: translateY(-50%);
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: white;
+            border-right: 1px solid var(--gray-200);
+            display: flex;
+            flex-direction: column;
+            box-shadow: var(--shadow-sm);
+            z-index: 10;
+            min-width: 250px;
+            max-width: 500px;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .sidebar-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--gray-800);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .search-box {
+            position: relative;
+            margin-bottom: 16px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 16px 12px 40px;
+            border: 2px solid var(--gray-200);
+            border-radius: var(--radius-md);
+            font-size: 0.95rem;
+            transition: var(--transition);
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray-400);
+        }
+
+        .filter-section {
+            padding: 0 20px 20px;
+            overflow-y: auto; /* Enable scrolling for filters */
+            flex: 1;
+        }
+
+        .filter-group {
+            margin-bottom: 20px;
+        }
+
+        .filter-group h3 {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--gray-700);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-options {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .filter-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 0.9rem;
+        }
+
+        .filter-option:hover {
+            background: var(--gray-100);
+        }
+
+        .filter-option.active {
+            background: rgba(67, 97, 238, 0.1);
+            color: var(--primary);
+        }
+
+        .filter-option i {
+            width: 20px;
+            text-align: center;
+        }
+
+        .filter-select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid var(--gray-200);
+            border-radius: var(--radius-sm);
+            font-size: 0.9rem;
+            background: white;
+            margin-bottom: 8px;
+        }
+
+        .date-filters {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .date-filter {
+            padding: 10px 12px;
+            border: 2px solid var(--gray-200);
+            border-radius: var(--radius-sm);
+            font-size: 0.9rem;
+        }
+
+        /* Content Area */
+        .content-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            min-width: 300px;
+        }
+
+        .content-header {
+            padding: 20px 24px;
+            background: white;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .content-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--gray-900);
+        }
+
+        .email-stats {
+            font-size: 0.9rem;
+            color: var(--gray-600);
+            background: var(--gray-100);
+            padding: 6px 12px;
+            border-radius: 20px;
+        }
+
+        /* Email List */
+        .email-list-container {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .email-list-header {
+            padding: 12px 24px;
+            background: var(--gray-100);
+            border-bottom: 1px solid var(--gray-200);
+            display: grid;
+            grid-template-columns: 40px 1fr 150px 100px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--gray-600);
+        }
+
+        .email-items {
+            flex: 1;
+            overflow-y: auto; /* Enable scrolling for email list */
+            padding: 8px;
+        }
+
+        .email-item {
+            display: grid;
+            grid-template-columns: 40px 1fr 150px 100px;
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--gray-200);
+            cursor: pointer;
+            transition: var(--transition);
+            align-items: center;
+        }
+
+        .email-item:hover {
+            background: var(--gray-100);
+        }
+
+        .email-item.active {
+            background: rgba(67, 97, 238, 0.05);
+            border-left: 3px solid var(--primary);
+        }
+
+        .email-checkbox {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .email-sender {
+            font-weight: 500;
+            color: var(--gray-800);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .email-subject {
+            font-size: 0.95rem;
+            color: var(--gray-700);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .email-date {
+            font-size: 0.85rem;
+            color: var(--gray-500);
+            text-align: right;
+        }
+
+        .email-category {
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 12px;
+            text-align: center;
+            text-transform: uppercase;
+        }
+
+        .category-Interested {
+            background: rgba(76, 201, 240, 0.2);
+            color: #0ea5e9;
+        }
+
+        .category-Meeting-Booked {
+            background: rgba(67, 97, 238, 0.2);
+            color: var(--primary);
+        }
+
+        .category-Not-Interested {
+            background: rgba(247, 37, 133, 0.2);
+            color: var(--danger);
+        }
+
+        .category-Spam {
+            background: rgba(100, 116, 139, 0.2);
+            color: var(--gray-600);
+        }
+
+        .category-Out-of-Office {
+            background: rgba(248, 150, 30, 0.2);
+            color: var(--warning);
+        }
+
+        /* Email Details */
+        .email-details-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: white;
+            border-left: 1px solid var(--gray-200);
+            min-width: 400px;
+            width: var(--details-width);
+        }
+
+        .email-details-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--gray-200);
+            background: white;
+        }
+
+        .email-details-subject {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 16px;
+            line-height: 1.3;
+            word-break: break-word;
+        }
+
+        .email-details-meta {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .sender-info {
+            flex: 1;
+        }
+
+        .sender-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 4px;
+        }
+
+        .sender-email {
+            color: var(--gray-600);
+            font-size: 0.95rem;
+            margin-bottom: 8px;
+            word-break: break-all;
+        }
+
+        .email-timestamp {
+            color: var(--gray-500);
+            font-size: 0.9rem;
+        }
+
+        .email-actions {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+        }
+
+        .action-button {
+            padding: 8px 16px;
+            border-radius: var(--radius-sm);
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .action-button.primary {
+            background: var(--primary);
+            color: white;
+            border: none;
+        }
+
+        .action-button.secondary {
+            background: var(--gray-100);
+            color: var(--gray-700);
+            border: 1px solid var(--gray-300);
+        }
+
+        .email-content {
+            flex: 1;
+            overflow-y: auto; /* Enable scrolling for email content */
+            padding: 24px;
+        }
+
+        .email-body {
+            line-height: 1.6;
+            color: var(--gray-800);
+            white-space: pre-wrap;
+            margin-bottom: 30px;
+            word-wrap: break-word;
+        }
+
+        .ai-analysis {
+            background: linear-gradient(135deg, #f0f4ff 0%, #e6eeff 100%);
+            border-radius: var(--radius-md);
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .ai-analysis-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .ai-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--secondary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .ai-analysis-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--gray-900);
+        }
+
+        .ai-category {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            margin-bottom: 16px;
+        }
+
+        .ai-confidence {
+            margin-bottom: 20px;
+        }
+
+        .confidence-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .confidence-bar {
+            height: 8px;
+            background: var(--gray-200);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .confidence-level {
+            height: 100%;
+            background: linear-gradient(90deg, var(--secondary) 0%, #5e0f94 100%);
+            border-radius: 4px;
+        }
+
+        .ai-reasoning {
+            margin-top: 20px;
+        }
+
+        .ai-reasoning-title {
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--gray-800);
+        }
+
+        .reasoning-list {
+            list-style-type: none;
+        }
+
+        .reasoning-item {
+            padding: 12px 16px;
+            background: white;
+            border-radius: var(--radius-sm);
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .feedback-section {
+            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+            border-radius: var(--radius-md);
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .feedback-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .feedback-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #92400e;
+        }
+
+        .feedback-description {
+            color: #92400e;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .feedback-options {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .feedback-option {
+            padding: 10px 16px;
+            background: white;
+            border: 2px solid #f59e0b;
+            border-radius: var(--radius-sm);
+            color: #92400e;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .feedback-option:hover {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .feedback-option.active {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .suggested-reply {
+            background: linear-gradient(135deg, #e0f7fa 0%, #bbdefb 100%);
+            border-radius: var(--radius-md);
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        .reply-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .reply-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--gray-900);
+        }
+
+        .reply-content {
+            background: white;
+            border-radius: var(--radius-sm);
+            padding: 20px;
+            margin-bottom: 20px;
+            min-height: 100px;
+            line-height: 1.5;
+            box-shadow: var(--shadow-sm);
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            overflow-y: auto; /* Enable scrolling for reply content */
+            max-height: 200px;
+        }
+
+        .generate-button {
+            background: var(--info);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: var(--radius-sm);
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .generate-button:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+        }
+
+        .no-email-selected {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            padding: 40px;
+            text-align: center;
+            color: var(--gray-500);
+        }
+
+        .no-email-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            color: var(--gray-300);
+        }
+
+        .no-email-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--gray-700);
+        }
+
+        .no-email-description {
+            font-size: 1.1rem;
+            max-width: 400px;
+            line-height: 1.5;
+        }
+
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            font-size: 1.2rem;
+            color: var(--gray-500);
+        }
+
+        .error {
+            padding: 20px;
+            color: var(--danger);
+            text-align: center;
+            font-size: 1.1rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .email-details-container {
+                width: 45%;
+            }
+        }
+
+        @media (max-width: 992px) {
+            .email-details-container {
+                width: 40%;
+            }
+            
+            .email-item {
+                grid-template-columns: 30px 1fr 120px 80px;
+                padding: 12px 16px;
+            }
+            
+            .email-details-subject {
+                font-size: 1.3rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid var(--gray-200);
+            }
+            
+            .email-details-container {
+                width: 100%;
+                border-left: none;
+                border-top: 1px solid var(--gray-200);
+            }
+            
+            .email-item {
+                grid-template-columns: 30px 1fr 100px 70px;
+            }
+            
+            .divider {
+                display: none;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .app-header {
+                padding: 0 16px;
+            }
+            
+            .header-brand .brand-info p {
+                display: none;
+            }
+            
+            .email-list-header,
+            .email-item {
+                grid-template-columns: 25px 1fr 80px 60px;
+                padding: 10px 12px;
+                font-size: 0.8rem;
+            }
+            
+            .email-details-subject {
+                font-size: 1.2rem;
+            }
+            
+            .email-actions {
+                flex-direction: column;
+                gap: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-brand">
+                <div class="logo">RI</div>
+                <div class="brand-info">
+                    <h1>ReachInbox Onebox AI</h1>
+                    <p>Unified AI-enhanced inbox — connected to your email accounts</p>
+                </div>
+            </div>
+            <div class="header-status">
+                <div class="status-pill">
+                    <div class="status-indicator"></div>
+                    <span id="accountCount">📧 Loading...</span>
+                </div>
+                <div class="status-pill">
+                    <div class="status-indicator"></div>
+                    <span id="connectionStatus">⚡ Connecting...</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Sidebar -->
+            <aside class="sidebar" id="sidebarPanel">
+                <div class="sidebar-header">
+                    <h2 class="sidebar-title"><i class="fas fa-filter"></i> Email Filters</h2>
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="searchInput" placeholder="Search emails...">
+                    </div>
+                </div>
+                
+                <div class="filter-section">
+                    <div class="filter-group">
+                        <h3><i class="fas fa-inbox"></i> Accounts</h3>
+                        <div class="filter-options" id="accountFilters">
+                            <!-- Account filters will be populated dynamically -->
+                        </div>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <h3><i class="fas fa-tag"></i> Categories</h3>
+                        <div class="filter-options">
+                            <div class="filter-option active" data-category="">
+                                <i class="fas fa-envelope"></i>
+                                <span>All Emails</span>
+                            </div>
+                            <div class="filter-option" data-category="Interested">
+                                <i class="fas fa-thumbs-up"></i>
+                                <span>Interested</span>
+                            </div>
+                            <div class="filter-option" data-category="Meeting Booked">
+                                <i class="fas fa-calendar-check"></i>
+                                <span>Meeting Booked</span>
+                            </div>
+                            <div class="filter-option" data-category="Not Interested">
+                                <i class="fas fa-thumbs-down"></i>
+                                <span>Not Interested</span>
+                            </div>
+                            <div class="filter-option" data-category="Spam">
+                                <i class="fas fa-trash-alt"></i>
+                                <span>Spam</span>
+                            </div>
+                            <div class="filter-option" data-category="Out of Office">
+                                <i class="fas fa-plane-departure"></i>
+                                <span>Out of Office</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <h3><i class="fas fa-calendar"></i> Date Range</h3>
+                        <div class="date-filters">
+                            <input type="date" class="date-filter" id="dateFromFilter">
+                            <input type="date" class="date-filter" id="dateToFilter">
+                        </div>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <h3><i class="fas fa-sliders-h"></i> Advanced Filters</h3>
+                        <select class="filter-select" id="folderFilter">
+                            <option value="">All Folders</option>
+                            <option value="INBOX">INBOX</option>
+                        </select>
+                        <select class="filter-select" id="confidenceFilter">
+                            <option value="">Any Confidence</option>
+                            <option value="0.8">High (80%+)</option>
+                            <option value="0.5">Medium (50%+)</option>
+                            <option value="0">Low (Any)</option>
+                        </select>
+                        <select class="filter-select" id="threadFilter">
+                            <option value="">All Emails</option>
+                            <option value="true">Has Thread</option>
+                            <option value="false">No Thread</option>
+                        </select>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Divider for resizing sidebar -->
+            <div class="divider" id="sidebarDivider"></div>
+
+            <!-- Content Area -->
+            <main class="content-area" id="contentPanel">
+                <div class="content-header">
+                    <h2 class="content-title">Email Inbox</h2>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <div class="email-stats" id="emailCount">Loading emails...</div>
+                        <button id="refreshEmails" class="action-button secondary" style="padding: 6px 12px; font-size: 0.9rem;">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="email-list-container">
+                    <div class="email-list-header">
+                        <div></div>
+                        <div>Sender</div>
+                        <div>Subject</div>
+                        <div>Date</div>
+                    </div>
+                    <div class="email-items" id="emailList">
+                        <!-- Email items will be populated dynamically -->
+                        <div class="loading">Loading emails...</div>
+                    </div>
+                </div>
+            </main>
+
+            <!-- Divider for resizing details panel -->
+            <div class="divider" id="detailsDivider"></div>
+
+            <!-- Email Details -->
+            <section class="email-details-container" id="emailDetails">
+                <div class="no-email-selected">
+                    <div class="no-email-icon">
+                        <i class="fas fa-envelope-open-text"></i>
+                    </div>
+                    <h3 class="no-email-title">No Email Selected</h3>
+                    <p class="no-email-description">Select an email from the list to view its details, AI analysis, and suggested replies.</p>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        // API base URL
+        const API_BASE = '/api/emails';
+        
+        // DOM elements
+        const searchInput = document.getElementById('searchInput');
+        const folderFilter = document.getElementById('folderFilter');
+        const confidenceFilter = document.getElementById('confidenceFilter');
+        const threadFilter = document.getElementById('threadFilter');
+        const dateFromFilter = document.getElementById('dateFromFilter');
+        const dateToFilter = document.getElementById('dateToFilter');
+        const emailList = document.getElementById('emailList');
+        const emailDetails = document.getElementById('emailDetails');
+        const emailCount = document.getElementById('emailCount');
+        const accountCount = document.getElementById('accountCount');
+        const connectionStatus = document.getElementById('connectionStatus');
+        const accountFilters = document.getElementById('accountFilters');
+        const categoryFilters = document.querySelectorAll('.filter-option');
+        
+        // Resizable panel elements
+        const sidebarPanel = document.getElementById('sidebarPanel');
+        const contentPanel = document.getElementById('contentPanel');
+        const sidebarDivider = document.getElementById('sidebarDivider');
+        const detailsDivider = document.getElementById('detailsDivider');
+        
+        // Current state
+        let currentEmails = [];
+        let selectedEmailId = null;
+        let selectedEmail = null;
+        let searchTimeout = null;
+        let activeFilters = {
+            accountId: '',
+            category: '',
+            folder: '',
+            minConfidence: '',
+            hasThread: '',
+            dateFrom: '',
+            dateTo: ''
+        };
+        
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadAccounts();
+            // Reset filters to undefined values to avoid sending empty strings
+            activeFilters = {
+                accountId: undefined,
+                category: undefined,
+                folder: undefined,
+                minConfidence: undefined,
+                hasThread: undefined,
+                dateFrom: undefined,
+                dateTo: undefined
+            };
+            await loadEmails();
+            setupEventListeners();
+            setupResizeListeners();
+            updateStatusIndicators();
+        });
+        
+        // Set up event listeners
+        function setupEventListeners() {
+            // Search with debounce
+            searchInput.addEventListener('input', () => {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(loadEmails, 500);
+            });
+            
+            // Enter key for search
+            searchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    loadEmails();
+                }
+            });
+            
+            // Refresh button
+            const refreshButton = document.getElementById('refreshEmails');
+            if (refreshButton) {
+                refreshButton.addEventListener('click', () => {
+                    loadEmails();
+                });
+            }
+            
+            // Filter change events
+            folderFilter.addEventListener('change', () => {
+                activeFilters.folder = folderFilter.value;
+                loadEmails();
+            });
+            
+            confidenceFilter.addEventListener('change', () => {
+                activeFilters.minConfidence = confidenceFilter.value;
+                loadEmails();
+            });
+            
+            threadFilter.addEventListener('change', () => {
+                activeFilters.hasThread = threadFilter.value;
+                loadEmails();
+            });
+            
+            dateFromFilter.addEventListener('change', () => {
+                activeFilters.dateFrom = dateFromFilter.value;
+                loadEmails();
+            });
+            
+            dateToFilter.addEventListener('change', () => {
+                activeFilters.dateTo = dateToFilter.value;
+                loadEmails();
+            });
+            
+            // Add specific event listeners for category filters
+            document.querySelectorAll('.filter-option[data-category]').forEach(filter => {
+                filter.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    // Update active state
+                    document.querySelectorAll('.filter-option[data-category]').forEach(f => f.classList.remove('active'));
+                    filter.classList.add('active');
+                    
+                    // Update filter and reload
+                    const category = filter.dataset.category || '';
+                    console.log('Filtering by category:', category); // Debug log
+                    activeFilters.category = category;
+                    loadEmails();
+                });
+            });
+        }
+        
+        // Set up resize listeners for panels
+        function setupResizeListeners() {
+            // Sidebar divider
+            sidebarDivider.addEventListener('mousedown', initResize);
+            // Details divider
+            detailsDivider.addEventListener('mousedown', initResize);
+        }
+        
+        // Initialize resizing
+        function initResize(e) {
+            isResizing = true;
+            currentResizer = e.target;
+            startX = e.clientX;
+            
+            // Get initial width based on which divider is being dragged
+            if (currentResizer === sidebarDivider) {
+                startWidth = parseInt(document.defaultView.getComputedStyle(sidebarPanel).width, 10);
+            } else if (currentResizer === detailsDivider) {
+                startWidth = parseInt(document.defaultView.getComputedStyle(contentPanel).width, 10);
+            }
+            
+            // Add event listeners for resizing
+            document.addEventListener('mousemove', resize);
+            document.addEventListener('mouseup', stopResize);
+            
+            // Prevent text selection during resize
+            e.preventDefault();
+        }
+        
+        // Resize panels
+        function resize(e) {
+            if (!isResizing) return;
+            
+            const dx = e.clientX - startX;
+            
+            if (currentResizer === sidebarDivider) {
+                // Resize sidebar
+                const newWidth = startWidth + dx;
+                // Constrain width between 250px and 500px
+                if (newWidth >= 250 && newWidth <= 500) {
+                    sidebarPanel.style.width = newWidth + 'px';
+                }
+            } else if (currentResizer === detailsDivider) {
+                // Resize content panel (which affects details panel)
+                const newWidth = startWidth + dx;
+                // Constrain width to reasonable values
+                if (newWidth >= 300) {
+                    contentPanel.style.flex = '0 0 ' + newWidth + 'px';
+                }
+            }
+        }
+        
+        // Stop resizing
+        function stopResize() {
+            isResizing = false;
+            currentResizer = null;
+            
+            // Remove event listeners
+            document.removeEventListener('mousemove', resize);
+            document.removeEventListener('mouseup', stopResize);
+        }
+        
+        // Update status indicators
+        function updateStatusIndicators() {
+            // Simulate connection status update
+            setTimeout(() => {
+                connectionStatus.innerHTML = '<div class="status-indicator"></div> <span>⚡ Connected</span>';
+            }, 2000);
+        }
+        
+        // Load accounts function
+        async function loadAccounts() {
+            try {
+                const response = await fetch(`${API_BASE}/accounts`);
+                const accounts = await response.json();
+                
+                // Update account count
+                accountCount.textContent = `📧 ${accounts.length} Account${accounts.length !== 1 ? 's' : ''}`;
+                
+                // Clear existing options
+                accountFilters.innerHTML = '';
+                
+                // Add "All Accounts" option
+                const allOption = document.createElement('div');
+                allOption.className = 'filter-option active';
+                allOption.dataset.account = '';
+                allOption.innerHTML = '<i class="fas fa-border-all"></i> <span>All Accounts</span>';
+                allOption.addEventListener('click', () => {
+                    document.querySelectorAll('.filter-option[data-account]').forEach(opt => opt.classList.remove('active'));
+                    allOption.classList.add('active');
+                    activeFilters.accountId = '';
+                    loadEmails();
+                });
+                accountFilters.appendChild(allOption);
+                
+                // Add account options
+                accounts.forEach(account => {
+                    const option = document.createElement('div');
+                    option.className = 'filter-option';
+                    option.dataset.account = account.id;
+                    option.innerHTML = `<i class="fas fa-envelope"></i> <span>${account.email}</span>`;
+                    option.addEventListener('click', () => {
+                        document.querySelectorAll('.filter-option[data-account]').forEach(opt => opt.classList.remove('active'));
+                        option.classList.add('active');
+                        activeFilters.accountId = account.id;
+                        loadEmails();
+                    });
+                    accountFilters.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading accounts:', error);
+                accountCount.textContent = '📧 Error loading accounts';
+            }
+        }
+        
+        // Load emails function
+        async function loadEmails(retryCount = 0) {
+            try {
+                // Show loading state
+                emailList.innerHTML = '<div class="loading">Loading emails...</div>';
+                
+                // Build query parameters
+                const params = new URLSearchParams();
+                const query = searchInput.value.trim();
+                
+                if (query) {
+                    params.append('q', query);
+                }
+                
+                // Only add filters if they have values
+                if (activeFilters.folder) {
+                    params.append('folder', activeFilters.folder);
+                }
+                
+                if (activeFilters.accountId) {
+                    params.append('accountId', activeFilters.accountId);
+                }
+                
+                if (activeFilters.category) {
+                    // Properly encode the category name for URL
+                    const encodedCategory = encodeURIComponent(activeFilters.category);
+                    params.append('aiCategory', encodedCategory);
+                    console.log('Sending category filter:', activeFilters.category, 'Encoded:', encodedCategory); // Debug log
+                }
+                
+                if (activeFilters.dateFrom) {
+                    params.append('dateFrom', activeFilters.dateFrom);
+                }
+                
+                if (activeFilters.dateTo) {
+                    params.append('dateTo', activeFilters.dateTo);
+                }
+                
+                if (activeFilters.minConfidence) {
+                    params.append('minConfidence', activeFilters.minConfidence);
+                }
+                
+                if (activeFilters.hasThread !== undefined && activeFilters.hasThread !== '') {
+                    params.append('hasThread', activeFilters.hasThread);
+                }
+                
+                // Add parameter to request all emails (prevent default pagination)
+                params.append('limit', '0'); // 0 often means no limit
+                
+                const url = `${API_BASE}/search?${params.toString()}`;
+                console.log('Fetching emails from:', url); // Debug log
+                
+                // Make API request
+                const response = await fetch(url);
+                const emails = await response.json();
+                
+                console.log('Received emails:', emails.length); // Debug log
+                
+                // If we got 0 emails but IMAP has fetched emails, retry a few times
+                if (emails.length === 0 && retryCount < 3) {
+                    console.log(`No emails found, retrying in 2 seconds (attempt ${retryCount + 1}/3)...`);
+                    setTimeout(() => loadEmails(retryCount + 1), 2000);
+                    return;
+                }
+                
+                // Store current emails
+                currentEmails = emails;
+                
+                // Update email count
+                emailCount.textContent = `${emails.length} email${emails.length !== 1 ? 's' : ''}`;
+                
+                // Render emails
+                renderEmails(emails);
+            } catch (error) {
+                console.error('Error loading emails:', error);
+                emailList.innerHTML = '<div class="error">Error loading emails. Please try again.</div>';
+            }
+        }
+        
+        // Render emails function
+        function renderEmails(emails) {
+            if (emails.length === 0) {
+                emailList.innerHTML = '<div class="email-item" style="justify-content: center; grid-template-columns: 1fr;">No emails found matching your criteria</div>';
+                return;
+            }
+            
+            emailList.innerHTML = emails.map(email => {
+                // Format confidence as percentage
+                const confidencePercent = email.aiConfidence ? Math.round(email.aiConfidence * 100) : 0;
+                
+                // Format date
+                const date = new Date(email.date);
+                const formattedDate = date.toLocaleDateString('en-US', { 
+                    month: 'short', 
+                    day: 'numeric'
+                });
+                
+                return `
+                <div class="email-item ${email.id === selectedEmailId ? 'active' : ''}" data-id="${email.id}">
+                    <div class="email-checkbox">
+                        <i class="far fa-envelope"></i>
+                    </div>
+                    <div class="email-sender">${escapeHtml(email.from)}</div>
+                    <div class="email-subject">${escapeHtml(email.subject)}</div>
+                    <div class="email-date">${formattedDate}</div>
+                </div>
+            `}).join('');
+            
+            // Add click event listeners to email items
+            document.querySelectorAll('.email-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const emailId = item.getAttribute('data-id');
+                    selectEmail(emailId);
+                });
+            });
+        }
+        
+        // Select an email and show its details
+        async function selectEmail(emailId) {
+            // Update selected email ID
+            selectedEmailId = emailId;
+            
+            // Re-render email list to show active item
+            renderEmails(currentEmails);
+            
+            // Show loading state in details panel
+            emailDetails.innerHTML = '<div class="loading">Loading email details...</div>';
+            
+            try {
+                // Fetch email details
+                const response = await fetch(`${API_BASE}/${emailId}`);
+                const email = await response.json();
+                
+                if (email.error) {
+                    emailDetails.innerHTML = `<div class="error">Error: ${email.error}</div>`;
+                    return;
+                }
+                
+                // Store selected email
+                selectedEmail = email;
+                
+                // Render email details
+                renderEmailDetails(email);
+            } catch (error) {
+                console.error('Error loading email details:', error);
+                emailDetails.innerHTML = '<div class="error">Error loading email details. Please try again.</div>';
+            }
+        }
+        
+        // Render email details
+        function renderEmailDetails(email) {
+            // Format confidence as percentage
+            const confidencePercent = email.aiConfidence ? Math.round(email.aiConfidence * 100) : 0;
+            
+            // Format date
+            const date = new Date(email.date);
+            const formattedDate = date.toLocaleDateString('en-US', { 
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            }) + ' at ' + date.toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+            
+            emailDetails.innerHTML = `
+                <div class="email-details-header">
+                    <h1 class="email-details-subject">${escapeHtml(email.subject)}</h1>
+                    <div class="email-details-meta">
+                        <div class="sender-info">
+                            <div class="sender-name">${escapeHtml(email.from)}</div>
+                            <div class="sender-email">to ${escapeHtml(email.to)}</div>
+                            <div class="email-timestamp">${formattedDate}</div>
+                        </div>
+                        <div class="email-actions">
+                            <button class="action-button primary">
+                                <i class="fas fa-reply"></i> Reply
+                            </button>
+                            <button class="action-button secondary">
+                                <i class="fas fa-archive"></i> Archive
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="email-content">
+                    <div class="email-body">
+                        ${escapeHtml(email.body)}
+                    </div>
+                    
+                    <div class="ai-analysis">
+                        <div class="ai-analysis-header">
+                            <div class="ai-icon">
+                                <i class="fas fa-robot"></i>
+                            </div>
+                            <h2 class="ai-analysis-title">AI Analysis</h2>
+                        </div>
+                        
+                        <div class="ai-category category-${escapeHtml(email.aiCategory?.replace(/\s+/g, '-') || 'Unknown')}">
+                            <i class="fas fa-tag"></i>
+                            ${escapeHtml(email.aiCategory || 'Uncategorized')}
+                            ${email.aiConfidence ? `<span style="margin-left: 8px;">(${confidencePercent}% confidence)</span>` : ''}
+                        </div>
+                        
+                        ${email.aiConfidence ? `
+                        <div class="ai-confidence">
+                            <div class="confidence-label">
+                                <span>Confidence Level</span>
+                                <span>${confidencePercent}%</span>
+                            </div>
+                            <div class="confidence-bar">
+                                <div class="confidence-level" style="width: ${confidencePercent}%"></div>
+                            </div>
+                        </div>
+                        ` : ''}
+                        
+                        ${email.aiReasoning && email.aiReasoning.length > 0 ? `
+                        <div class="ai-reasoning">
+                            <h3 class="ai-reasoning-title">AI Reasoning</h3>
+                            <ul class="reasoning-list">
+                                ${email.aiReasoning.map(reason => `<li class="reasoning-item">${escapeHtml(reason)}</li>`).join('')}
+                            </ul>
+                        </div>
+                        ` : ''}
+                    </div>
+                    
+                    <div class="feedback-section">
+                        <div class="feedback-header">
+                            <div class="ai-icon" style="background: #f59e0b;">
+                                <i class="fas fa-comment-dots"></i>
+                            </div>
+                            <h2 class="feedback-title">Improve AI Accuracy</h2>
+                        </div>
+                        <p class="feedback-description">
+                            Is this categorization correct? Help improve the AI by providing feedback. 
+                            Your corrections help train the model to be more accurate.
+                        </p>
+                        <div class="feedback-options">
+                            <div class="feedback-option" data-category="Interested">
+                                <i class="fas fa-thumbs-up"></i> Interested
+                            </div>
+                            <div class="feedback-option" data-category="Meeting Booked">
+                                <i class="fas fa-calendar-check"></i> Meeting
+                            </div>
+                            <div class="feedback-option" data-category="Not Interested">
+                                <i class="fas fa-thumbs-down"></i> Not Interested
+                            </div>
+                            <div class="feedback-option" data-category="Spam">
+                                <i class="fas fa-trash-alt"></i> Spam
+                            </div>
+                            <div class="feedback-option" data-category="Out of Office">
+                                <i class="fas fa-plane-departure"></i> Out of Office
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="suggested-reply">
+                        <div class="reply-header">
+                            <div class="ai-icon" style="background: var(--info);">
+                                <i class="fas fa-magic"></i>
+                            </div>
+                            <h2 class="reply-title">AI-Powered Suggested Reply</h2>
+                        </div>
+                        <div class="reply-content" id="suggestedReplyContent">
+                            Click the button below to generate a suggested reply
+                        </div>
+                        <button class="generate-button" id="generateReplyButton">
+                            <i class="fas fa-sparkles"></i> Generate Suggested Reply
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            // Add event listener to generate reply button
+            document.getElementById('generateReplyButton').addEventListener('click', () => {
+                generateSuggestedReply(email);
+            });
+            
+            // Add event listeners to feedback options
+            document.querySelectorAll('.feedback-option').forEach(option => {
+                option.addEventListener('click', async (e) => {
+                    const correctedCategory = e.currentTarget.getAttribute('data-category');
+                    await submitFeedback(email.id, correctedCategory);
+                    
+                    // Update active state
+                    document.querySelectorAll('.feedback-option').forEach(opt => {
+                        opt.classList.remove('active');
+                    });
+                    e.currentTarget.classList.add('active');
+                });
+            });
+        }
+        
+        // Submit user feedback
+        async function submitFeedback(emailId, correctedCategory) {
+            try {
+                const response = await fetch(`${API_BASE}/${emailId}/feedback`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ correctedCategory })
+                });
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    console.error('Error submitting feedback:', data.error);
+                    return;
+                }
+                
+                console.log('Feedback submitted successfully');
+            } catch (error) {
+                console.error('Error submitting feedback:', error);
+            }
+        }
+        
+        // Generate suggested reply
+        async function generateSuggestedReply(email) {
+            const replyContent = document.getElementById('suggestedReplyContent');
+            replyContent.innerHTML = '<div style="display: flex; align-items: center; gap: 12px; color: var(--gray-500);"><div class="loading-spinner"></div>Generating suggested reply with AI...</div>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/${email.id}/suggest-reply`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        productId: 'default'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    replyContent.innerHTML = `Error: ${data.error}`;
+                    return;
+                }
+                
+                replyContent.innerHTML = data.suggestedReply || 'No suggestion available';
+            } catch (error) {
+                console.error('Error generating suggested reply:', error);
+                replyContent.innerHTML = 'Error generating suggested reply. Please try again.';
+            }
+        }
+        
+        // Helper function to escape HTML
+        function escapeHtml(text) {
+            if (!text) return '';
+            return text
+                .toString()
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+        
+        // Add loading spinner style
+        const style = document.createElement('style');
+        style.textContent = `
+            .loading-spinner {
+                width: 20px;
+                height: 20px;
+                border: 3px solid var(--gray-200);
+                border-top: 3px solid var(--primary);
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+            }
+            
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
