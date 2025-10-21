@@ -242,3 +242,54 @@ EXTERNAL_WEBHOOK_URL=your-external-webhook-url
 - Use app passwords for Gmail accounts instead of regular passwords
 - Regularly rotate API keys and credentials
 - Monitor rate limits for external services
+
+## Deployment
+
+### GitHub Repository
+
+To push the code to GitHub:
+
+1. Create a new repository on GitHub
+2. Add the remote origin:
+   ```bash
+   git remote add origin https://github.com/yourusername/your-repo-name.git
+   ```
+3. Push the code:
+   ```bash
+   git branch -M main
+   git push -u origin main
+   ```
+
+### Hosting Options
+
+This application can be deployed to several hosting platforms:
+
+#### Heroku (Recommended)
+
+1. Create a Heroku account and install the Heroku CLI
+2. Create a new Heroku app:
+   ```bash
+   heroku create your-app-name
+   ```
+3. Set environment variables in Heroku dashboard or using CLI:
+   ```bash
+   heroku config:set IMAP_HOST_1=imap.gmail.com
+   heroku config:set IMAP_PORT_1=993
+   # ... set all other environment variables
+   ```
+4. Deploy the application:
+   ```bash
+   git push heroku main
+   ```
+
+#### Important Notes for Deployment
+
+1. **External Services**: This application requires Elasticsearch and Qdrant services. You'll need to:
+   - Use managed services (Elastic Cloud, Qdrant Cloud) or
+   - Self-host these services on separate servers
+
+2. **Persistent Connections**: The application maintains persistent IMAP connections which may not work well with some hosting platforms that restart applications frequently.
+
+3. **Environment Variables**: Never commit your [.env](file:///C:/Users/91939/Desktop/onebox/.env) file to version control. Always use the hosting platform's environment variable configuration.
+
+For detailed deployment instructions, see [DEPLOYMENT.md](file:///C:/Users/91939/Desktop/onebox/DEPLOYMENT.md).
