@@ -92,7 +92,8 @@ app.get('/health', (req: Request, res: Response) => {
     services: {
       imap: 'initialized',
       elasticsearch: elasticsearchService['isConnected'] ? 'connected' : 'disconnected',
-      qdrant: qdrantService && qdrantService['isConnected'] ? 'connected' : 'disconnected'
+      qdrant: qdrantService && typeof qdrantService.getIsConnected === 'function' ? 
+        (qdrantService.getIsConnected() ? 'connected' : 'disconnected') : 'not initialized'
     }
   });
 });
