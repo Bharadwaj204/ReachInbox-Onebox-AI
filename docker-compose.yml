@@ -2,6 +2,7 @@ version: "3.8"
 services:
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.17.1
+    container_name: elasticsearch
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false
@@ -15,17 +16,53 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
+    networks:
+      - reachinbox-net
 
   qdrant:
     image: qdrant/qdrant
+    container_name: qdrant
     ports:
       - "6335:6333"  # REST API
       - "6334:6334"  # gRPC
     volumes:
       - qdrant_storage:/qdrant/storage
+    networks:
+      - reachinbox-net
+
+  backend:
+    build: .
+    container_name: reachinbox-backend
+    ports:
+      - "3000:3000"
+    environment:
+      - ELASTICSEARCH_HOST=elasticsearch
+      - ELASTICSEARCH_PORT=9200
+      - QDRANT_HOST=qdrant
+      - QDRANT_PORT=6333
+      # Add your IMAP and other environment variables here
+      # - IMAP_HOST_1=imap.gmail.com
+      # - IMAP_PORT_1=993
+      # - IMAP_USER_1=your-email@gmail.com
+      # - IMAP_PASSWORD_1=your-app-password
+      # - IMAP_FOLDER_1=INBOX
+      # - IMAP_TLS_1=true
+      # - GEMINI_API_KEY=your-gemini-api-key
+    volumes:
+      - .:/app
+      - /app/node_modules
+    depends_on:
+      - elasticsearch
+      - qdrant
+    networks:
+      - reachinbox-net
 
 volumes:
   esdata:
     driver: local
   qdrant_storage:
     driver: local
+
+networks:
+  reachinbox-net:
+    driver: bridge
