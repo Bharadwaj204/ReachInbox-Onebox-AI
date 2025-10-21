@@ -3,8 +3,8 @@ import { Email } from '../types/email.types';
 import { AppConfig } from '../config/app.config';
 
 export class ElasticsearchService {
-  private client: Client;
-  private index: string;
+  private client: Client | null = null;
+  private index: string = 'emails';
   private isConnected: boolean = false;
   private connectionAttempts: number = 0;
   private maxConnectionAttempts: number = 5;
@@ -19,7 +19,7 @@ export class ElasticsearchService {
     };
 
     // Use Cloud ID if available, otherwise use host/port
-    if (AppConfig.elasticsearch.cloudId) {
+    if (AppConfig.elasticsearch.cloudId && AppConfig.elasticsearch.cloudId.trim() !== '') {
       clientConfig.cloud = {
         id: AppConfig.elasticsearch.cloudId
       };
@@ -31,11 +31,22 @@ export class ElasticsearchService {
           password: AppConfig.elasticsearch.password
         };
       }
-    } else {
+    } else if (AppConfig.elasticsearch.host && AppConfig.elasticsearch.host.trim() !== '') {
       clientConfig.node = `http://${AppConfig.elasticsearch.host}:${AppConfig.elasticsearch.port}`;
+    } else {
+      console.error('Elasticsearch configuration is missing. Please set either ELASTICSEARCH_CLOUD_ID or ELASTICSEARCH_HOST environment variables.');
+      // Initialize with a mock client to prevent crashes
+      this.isConnected = false;
+      return;
     }
 
-    this.client = new Client(clientConfig);
+    try {
+      this.client = new Client(clientConfig);
+    } catch (error) {
+      console.error('Failed to create Elasticsearch client:', error);
+      this.isConnected = false;
+      return;
+    }
     
     this.index = AppConfig.elasticsearch.index;
     
@@ -48,6 +59,13 @@ export class ElasticsearchService {
   }
 
   private async testConnectionWithRetry(): Promise<void> {
+    // Check if client is initialized
+    if (!this.client) {
+      console.warn('Elasticsearch client not initialized. Skipping connection test.');
+      this.isConnected = false;
+      return;
+    }
+
     while (this.connectionAttempts < this.maxConnectionAttempts) {
       try {
         await this.client.ping();
@@ -74,6 +92,12 @@ export class ElasticsearchService {
   }
 
   public async initializeIndex(): Promise<void> {
+    // Check if client is initialized
+    if (!this.client) {
+      console.warn('Elasticsearch client not initialized. Skipping index initialization.');
+      return;
+    }
+
     if (!this.isConnected) {
       console.warn('Elasticsearch not connected. Skipping index initialization.');
       return;
@@ -117,6 +141,12 @@ export class ElasticsearchService {
   }
 
   public async indexEmail(email: Email): Promise<void> {
+    // Check if client is initialized
+    if (!this.client) {
+      console.warn('Elasticsearch client not initialized. Skipping email indexing.');
+      return;
+    }
+
     if (!this.isConnected) {
       console.warn('Elasticsearch not connected. Skipping email indexing.');
       return;
@@ -144,6 +174,12 @@ export class ElasticsearchService {
     minConfidence?: number,
     hasThread?: boolean
   }): Promise<Email[]> {
+    // Check if client is initialized
+    if (!this.client) {
+      console.warn('Elasticsearch client not initialized. Search not available.');
+      return [];
+    }
+
     if (!this.isConnected) {
       console.warn('Elasticsearch not connected. Search not available.');
       return [];
@@ -248,6 +284,12 @@ export class ElasticsearchService {
   }
 
   public async getEmailById(id: string): Promise<Email | null> {
+    // Check if client is initialized
+    if (!this.client) {
+      console.warn('Elasticsearch client not initialized. Get email by ID not available.');
+      return null;
+    }
+
     if (!this.isConnected) {
       console.warn('Elasticsearch not connected. Get email by ID not available.');
       return null;
@@ -271,6 +313,12 @@ export class ElasticsearchService {
   }
 
   public async updateEmailCategory(emailId: string, category: string): Promise<void> {
+    // Check if client is initialized
+    if (!this.client) {
+      console.warn('Elasticsearch client not initialized. Skipping email category update.');
+      return;
+    }
+
     if (!this.isConnected) {
       console.warn('Elasticsearch not connected. Skipping email category update.');
       return;
@@ -295,6 +343,12 @@ export class ElasticsearchService {
 
   // Method to update email with AI confidence and reasoning
   public async updateEmailAIResults(emailId: string, aiCategory: string, aiConfidence: number, aiReasoning: string[]): Promise<void> {
+    // Check if client is initialized
+    if (!this.client) {
+      console.warn('Elasticsearch client not initialized. Skipping email AI results update.');
+      return;
+    }
+
     if (!this.isConnected) {
       console.warn('Elasticsearch not connected. Skipping email AI results update.');
       return;
@@ -321,6 +375,12 @@ export class ElasticsearchService {
 
   // Method to update email summary
   public async updateEmailSummary(emailId: string, summary: string): Promise<void> {
+    // Check if client is initialized
+    if (!this.client) {
+      console.warn('Elasticsearch client not initialized. Skipping email summary update.');
+      return;
+    }
+
     if (!this.isConnected) {
       console.warn('Elasticsearch not connected. Skipping email summary update.');
       return;
