@@ -13,7 +13,7 @@
 
 Before deploying, you'll need to configure the following environment variables in your deployment platform:
 
-``env
+```env
 # IMAP Configuration
 IMAP_HOST_1=imap.gmail.com
 IMAP_PORT_1=993
@@ -162,7 +162,7 @@ services:
     startCommand: npm start
     envVars:
       - key: NODE_VERSION
-        value: 18
+        value: 20
       - key: PORT
         value: 3000
 ```
@@ -205,7 +205,7 @@ You can use:
 
 ## Notes
 
-1. The application requires persistent connections to email servers, which may not work well with Heroku's ephemeral filesystem.
+1. The application requires persistent connections to email servers, which may not work well with Render's ephemeral filesystem.
 2. Consider using a more suitable hosting platform for long-running applications with persistent connections.
 3. The free tier of Google Gemini API has rate limits that may affect email processing speed.
 
@@ -222,7 +222,7 @@ For production deployment, you have several options:
 
 2. **Create a Docker image**:
    ```dockerfile
-   FROM node:16-alpine
+   FROM node:20-alpine
    
    WORKDIR /app
    
@@ -290,7 +290,7 @@ For production deployment, you have several options:
    sudo apt update && sudo apt upgrade -y
    
    # Install Node.js
-   curl -fsSL https://deb.nodesource.com/setup_16.x | sudo -E bash -
+   curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
    sudo apt-get install -y nodejs
    
    # Install Docker
@@ -507,8 +507,8 @@ PORT=3000
 
 2. **Performance Monitoring**:
    - Monitor resource usage
-   - Optimize database queries
-   - Review logs for errors
+   - Review database queries
+   - Optimize configurations
 
 3. **Capacity Planning**:
    - Monitor storage usage
