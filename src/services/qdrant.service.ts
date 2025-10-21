@@ -10,7 +10,9 @@ export class QdrantService {
   private embeddingModel: any;
 
   constructor() {
-    this.baseUrl = `http://${AppConfig.qdrant.host}:${AppConfig.qdrant.port}`;
+    // Use HTTPS for Qdrant Cloud
+    const protocol = AppConfig.qdrant.host.includes('cloud.qdrant.io') ? 'https' : 'http';
+    this.baseUrl = `${protocol}://${AppConfig.qdrant.host}:${AppConfig.qdrant.port}`;
     this.genAI = new GoogleGenerativeAI(AppConfig.gemini.apiKey);
     // Use embedding model for generating embeddings
     this.embeddingModel = this.genAI.getGenerativeModel({ model: 'embedding-001' });
@@ -21,7 +23,15 @@ export class QdrantService {
 
   private async testConnection(): Promise<void> {
     try {
-      await axios.get(`${this.baseUrl}/collections`);
+      // Configure axios with API key if available
+      const config: any = {};
+      if (AppConfig.qdrant.apiKey) {
+        config.headers = {
+          'api-key': AppConfig.qdrant.apiKey
+        };
+      }
+      
+      await axios.get(`${this.baseUrl}/collections`, config);
       this.isConnected = true;
       console.log('Qdrant connection established');
     } catch (error) {
@@ -41,13 +51,20 @@ export class QdrantService {
       const collections = await this.getCollections();
       
       if (!collections.includes(this.collectionName)) {
-        // Create collection
+        // Create collection with API key authentication
+        const config: any = {};
+        if (AppConfig.qdrant.apiKey) {
+          config.headers = {
+            'api-key': AppConfig.qdrant.apiKey
+          };
+        }
+        
         await axios.put(`${this.baseUrl}/collections/${this.collectionName}`, {
           vectors: {
             size: 768, // Embedding size for embedding-001 model
             distance: 'Cosine'
           }
-        });
+        }, config);
         
         console.log(`Created Qdrant collection: ${this.collectionName}`);
       } else {
@@ -64,7 +81,15 @@ export class QdrantService {
     }
     
     try {
-      const response = await axios.get(`${this.baseUrl}/collections`);
+      // Configure axios with API key if available
+      const config: any = {};
+      if (AppConfig.qdrant.apiKey) {
+        config.headers = {
+          'api-key': AppConfig.qdrant.apiKey
+        };
+      }
+      
+      const response = await axios.get(`${this.baseUrl}/collections`, config);
       return response.data.result.collections.map((col: any) => col.name);
     } catch (error) {
       console.error('Error fetching collections:', error);
@@ -82,6 +107,14 @@ export class QdrantService {
       // Generate embedding using Gemini
       const embedding = await this.generateEmbedding(text);
       
+      // Configure axios with API key if available
+      const config: any = {};
+      if (AppConfig.qdrant.apiKey) {
+        config.headers = {
+          'api-key': AppConfig.qdrant.apiKey
+        };
+      }
+      
       await axios.put(`${this.baseUrl}/collections/${this.collectionName}/points`, {
         points: [
           {
@@ -93,7 +126,7 @@ export class QdrantService {
             }
           }
         ]
-      });
+      }, config);
       
       console.log(`Added product data with ID: ${id}`);
     } catch (error) {
@@ -111,12 +144,20 @@ export class QdrantService {
       // Generate embedding for the query
       const queryEmbedding = await this.generateEmbedding(query);
       
+      // Configure axios with API key if available
+      const config: any = {};
+      if (AppConfig.qdrant.apiKey) {
+        config.headers = {
+          'api-key': AppConfig.qdrant.apiKey
+        };
+      }
+      
       // Search for similar vectors
       const response = await axios.post(`${this.baseUrl}/collections/${this.collectionName}/points/search`, {
         vector: queryEmbedding,
         limit: limit,
         with_payload: true
-      });
+      }, config);
       
       return response.data.result;
     } catch (error) {

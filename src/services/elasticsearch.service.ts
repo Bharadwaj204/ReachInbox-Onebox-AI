@@ -10,13 +10,32 @@ export class ElasticsearchService {
   private maxConnectionAttempts: number = 5;
 
   constructor() {
-    this.client = new Client({
-      node: `http://${AppConfig.elasticsearch.host}:${AppConfig.elasticsearch.port}`,
+    // Configure Elasticsearch client based on available environment variables
+    const clientConfig: any = {
       requestTimeout: 10000, // Increase timeout to 10 seconds
       sniffOnStart: false, // Disable sniffing to avoid connection issues
       sniffInterval: false, // Disable periodic sniffing
       sniffOnConnectionFault: false // Disable sniffing on connection faults
-    });
+    };
+
+    // Use Cloud ID if available, otherwise use host/port
+    if (AppConfig.elasticsearch.cloudId) {
+      clientConfig.cloud = {
+        id: AppConfig.elasticsearch.cloudId
+      };
+      
+      // Add authentication if username/password are provided
+      if (AppConfig.elasticsearch.username && AppConfig.elasticsearch.password) {
+        clientConfig.auth = {
+          username: AppConfig.elasticsearch.username,
+          password: AppConfig.elasticsearch.password
+        };
+      }
+    } else {
+      clientConfig.node = `http://${AppConfig.elasticsearch.host}:${AppConfig.elasticsearch.port}`;
+    }
+
+    this.client = new Client(clientConfig);
     
     this.index = AppConfig.elasticsearch.index;
     
