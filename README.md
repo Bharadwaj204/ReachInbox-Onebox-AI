@@ -62,6 +62,52 @@ An AI-powered email aggregator that synchronizes emails in real-time, indexes th
    npm start
    ```
 
+## Docker Compose Setup (Recommended)
+
+The project includes a comprehensive Docker Compose setup that runs all services together:
+
+1. **Update Environment Variables**:
+   Edit the [.env](file:///C:/Users/91939/Desktop/onebox/.env) file with your actual configuration:
+   ```env
+   # IMAP Configuration
+   IMAP_HOST_1=imap.gmail.com
+   IMAP_PORT_1=993
+   IMAP_USER_1=your-email@gmail.com
+   IMAP_PASSWORD_1=your-app-password
+   IMAP_FOLDER_1=INBOX
+   IMAP_TLS_1=true
+
+   # Add additional IMAP accounts as needed
+   IMAP_HOST_2=imap.gmail.com
+   IMAP_PORT_2=993
+   IMAP_USER_2=your-second-email@gmail.com
+   IMAP_PASSWORD_2=your-second-app-password
+   IMAP_FOLDER_2=INBOX
+   IMAP_TLS_2=true
+
+   # Gemini API Configuration
+   GEMINI_API_KEY=your-gemini-api-key
+
+   # Optional Webhook URLs
+   SLACK_WEBHOOK_URL=your-slack-webhook-url
+   EXTERNAL_WEBHOOK_URL=your-external-webhook-url
+   ```
+
+2. **Start All Services**:
+   ```bash
+   docker-compose up -d
+   ```
+
+3. **Access the Application**:
+   Open your browser and navigate to `http://localhost:3000`
+
+This Docker Compose setup includes:
+- Elasticsearch service for email indexing
+- Qdrant service for AI vector storage
+- Backend service running the ReachInbox application
+- Proper networking between all services
+- Volume persistence for data storage
+
 ## Project Structure
 
 ```
