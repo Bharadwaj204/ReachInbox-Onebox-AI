@@ -3,10 +3,10 @@ import { QdrantService } from './qdrant.service';
 import { AppConfig } from '../config/app.config';
 
 export class RAGService {
-  private genAI: GoogleGenerativeAI;
+  private genAI: GoogleGenerativeAI | null = null;
   private model: any; // Using 'any' to avoid type issues
   private embeddingModel: any; // For generating embeddings
-  private qdrantService: QdrantService;
+  private qdrantService: QdrantService | null = null;
 
   constructor() {
     // Add debug logging
@@ -15,20 +15,48 @@ export class RAGService {
       qdrantPort: AppConfig.qdrant.port
     });
     
-    this.genAI = new GoogleGenerativeAI(AppConfig.gemini.apiKey);
-    this.model = this.genAI.getGenerativeModel({ model: 'gemini-2.0-flash-001' });
-    // Use embedding model for generating embeddings
-    this.embeddingModel = this.genAI.getGenerativeModel({ model: 'embedding-001' });
-    this.qdrantService = new QdrantService();
+    this.initializeService();
+  }
+
+  private async initializeService(): Promise<void> {
+    // Wait a bit for environment variables to be fully loaded
+    await new Promise(resolve => setTimeout(resolve, 150));
     
-    // Initialize Qdrant collection
-    this.qdrantService.initializeCollection();
+    if (!AppConfig.gemini.apiKey || AppConfig.gemini.apiKey === 'your-actual-gemini-api-key-from-ai-studio') {
+      console.warn('Invalid Gemini API key. RAG service will be disabled.');
+      return;
+    }
     
-    // Add sample product data for demonstration
-    this.initializeSampleData();
+    try {
+      this.genAI = new GoogleGenerativeAI(AppConfig.gemini.apiKey);
+      this.model = this.genAI.getGenerativeModel({ model: 'gemini-2.0-flash-001' });
+      // Use embedding model for generating embeddings
+      this.embeddingModel = this.genAI.getGenerativeModel({ model: 'embedding-001' });
+      this.qdrantService = new QdrantService();
+      
+      // Initialize Qdrant collection after a delay to ensure service is ready
+      setTimeout(() => {
+        if (this.qdrantService) {
+          this.qdrantService.initializeCollection();
+        }
+      }, 500);
+      
+      // Add sample product data for demonstration after a delay
+      setTimeout(() => {
+        this.initializeSampleData();
+      }, 1000);
+    } catch (error) {
+      console.error('Error initializing RAG service:', error);
+    }
   }
 
   private async initializeSampleData() {
+    // Check if service is properly initialized
+    if (!this.genAI || !this.qdrantService) {
+      console.warn('RAG service not properly initialized. Skipping sample data initialization.');
+      return;
+    }
+
     try {
       // Add some sample product data for demonstration
       await this.addProductData('job-application', 
@@ -51,6 +79,12 @@ export class RAGService {
   }
 
   public async generateSuggestedReply(emailContent: string, productId?: string): Promise<string> {
+    // Check if service is properly initialized
+    if (!this.genAI || !this.qdrantService) {
+      console.warn('RAG service not properly initialized. Returning default reply.');
+      return 'Unable to generate suggested reply at this time.';
+    }
+
     try {
       // Step 1: Generate embedding for the query
       console.log('Generating embedding for email content...');
@@ -90,6 +124,12 @@ export class RAGService {
   }
 
   public async addProductData(id: string, text: string, metadata: any): Promise<void> {
+    // Check if service is properly initialized
+    if (!this.genAI || !this.qdrantService) {
+      console.warn('RAG service not properly initialized. Skipping product data addition.');
+      return;
+    }
+
     try {
       await this.qdrantService.addProductData(id, text, metadata);
       console.log(`Added product data to RAG system: ${id}`);
