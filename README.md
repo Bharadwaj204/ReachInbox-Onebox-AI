@@ -332,17 +332,16 @@ This application can be deployed to several hosting platforms:
 
 Render is a unified cloud platform that makes it easy to build and run all your apps and websites with free TLS certificates, a global CDN, DDoS protection, private networks, and auto-deploys from Git.
 
-##### Prerequisites
+For detailed step-by-step instructions on deploying to Render with cloud services, see our dedicated guides:
 
-1. Create a Render account at [render.com](https://render.com)
-2. Connect your GitHub account to Render
-3. Set up managed services for Elasticsearch and Qdrant (see below)
+1. [DEPLOYMENT.md](file:///C:/Users/91939/Desktop/onebox/DEPLOYMENT.md) - General deployment information
+2. [RENDER_DEPLOYMENT.md](file:///C:/Users/91939/Desktop/onebox/RENDER_DEPLOYMENT.md) - Detailed step-by-step Render deployment guide
 
-##### Deployment Steps
+##### Quick Render Deployment Steps
 
 1. **Prepare External Services**:
-   - For Elasticsearch, sign up for [Elastic Cloud](https://cloud.elastic.co/) or use another managed service
-   - For Qdrant, sign up for [Qdrant Cloud](https://qdrant.tech/cloud/) or use another managed service
+   - For Elasticsearch, sign up for [Elastic Cloud](https://cloud.elastic.co/)
+   - For Qdrant, sign up for [Qdrant Cloud](https://qdrant.tech/cloud/)
 
 2. **Fork or Push Your Repository**:
    - Fork this repository to your GitHub account or push it to a new GitHub repository
@@ -354,16 +353,16 @@ Render is a unified cloud platform that makes it easy to build and run all your 
    - Configure the service:
      - Name: `reachinbox-onebox-ai`
      - Environment: `Node`
-     - Build Command: `npm run build`
+     - Build Command: `npm ci && npm run build`
      - Start Command: `npm start`
      - Instance Type: `Starter` (or higher for production)
 
 4. **Configure Environment Variables**:
-   In the Render dashboard, go to your service settings and add all environment variables from your [.env](file:///C:/Users/91939/Desktop/onebox/.env) file:
-   - `IMAP_HOST_1`, `IMAP_PORT_1`, `IMAP_USER_1`, `IMAP_PASSWORD_1`, etc.
-   - `ELASTICSEARCH_HOST` and `ELASTICSEARCH_PORT` (from your managed service)
-   - `QDRANT_HOST` and `QDRANT_PORT` (from your managed service)
-   - `GEMINI_API_KEY`
+   In the Render dashboard, go to your service settings and add all environment variables:
+   - `IMAP_HOST_1`, `IMAP_PORT_1`, `IMAP_USER_1`, `IMAP_PASS_1`, etc.
+   - `ELASTICSEARCH_CLOUD_ID`, `ELASTICSEARCH_USERNAME`, `ELASTICSEARCH_PASSWORD` (from your Elastic Cloud service)
+   - `QDRANT_HOST`, `QDRANT_PORT`, `QDRANT_API_KEY` (from your Qdrant Cloud service)
+   - `GEMINI_API_KEY` (from Google Cloud)
    - Optional: `SLACK_WEBHOOK_URL`, `EXTERNAL_WEBHOOK_URL`
 
 5. **Deploy**:
