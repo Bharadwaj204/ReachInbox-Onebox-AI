@@ -282,33 +282,21 @@ This application can be deployed to several hosting platforms:
    git push heroku main
    ```
 
-#### Important Notes for Deployment
-
-1. **External Services**: This application requires Elasticsearch and Qdrant services. You'll need to:
-   - Use managed services (Elastic Cloud, Qdrant Cloud) or
-   - Self-host these services on separate servers
-
-2. **Persistent Connections**: The application maintains persistent IMAP connections which may not work well with some hosting platforms that restart applications frequently.
-
-3. **Environment Variables**: Never commit your [.env](file:///C:/Users/91939/Desktop/onebox/.env) file to version control. Always use the hosting platform's environment variable configuration.
-
-For detailed deployment instructions, see [DEPLOYMENT.md](file:///C:/Users/91939/Desktop/onebox/DEPLOYMENT.md).
-
-### Render Deployment
+#### Render Deployment
 
 Render is a unified cloud platform that makes it easy to build and run all your apps and websites with free TLS certificates, a global CDN, DDoS protection, private networks, and auto-deploys from Git.
 
-#### Prerequisites
+##### Prerequisites
 
 1. Create a Render account at [render.com](https://render.com)
 2. Connect your GitHub account to Render
 3. Set up managed services for Elasticsearch and Qdrant (see below)
 
-#### Deployment Steps
+##### Deployment Steps
 
 1. **Prepare External Services**:
    - For Elasticsearch, sign up for [Elastic Cloud](https://cloud.elastic.co/) or use another managed service
-   - For Qdrant, sign up for [Qdrant Cloud](https://qdrant.to/cloud) or use another managed service
+   - For Qdrant, sign up for [Qdrant Cloud](https://qdrant.tech/cloud/) or use another managed service
 
 2. **Fork or Push Your Repository**:
    - Fork this repository to your GitHub account or push it to a new GitHub repository
@@ -337,7 +325,7 @@ Render is a unified cloud platform that makes it easy to build and run all your 
    - Render will automatically build and deploy your application
    - The application will be available at `https://your-app-name.onrender.com`
 
-#### Important Render Configuration
+##### Important Render Configuration
 
 Render automatically sets the `PORT` environment variable, which your application already respects.
 
@@ -345,10 +333,22 @@ For persistent connections to work properly on Render:
 - Use the "Starter" tier or higher (free tier may restart your application periodically)
 - Consider adding a cron job to periodically check and re-establish IMAP connections if needed
 
-#### Environment Variables on Render
+##### Environment Variables on Render
 
 Render allows you to set environment variables in the dashboard:
 1. Go to your service in the Render dashboard
 2. Click "Environment" in the sidebar
 3. Add each variable from your [.env](file:///C:/Users/91939/Desktop/onebox/.env) file with the appropriate values
 4. Make sure to use the connection details for your managed Elasticsearch and Qdrant services
+
+#### Important Notes for Deployment
+
+1. **External Services**: This application requires Elasticsearch and Qdrant services. You'll need to:
+   - Use managed services (Elastic Cloud, Qdrant Cloud) or
+   - Self-host these services on separate servers
+
+2. **Persistent Connections**: The application maintains persistent IMAP connections which may not work well with some hosting platforms that restart applications frequently.
+
+3. **Environment Variables**: Never commit your [.env](file:///C:/Users/91939/Desktop/onebox/.env) file to version control. Always use the hosting platform's environment variable configuration.
+
+For detailed deployment instructions, see [DEPLOYMENT.md](file:///C:/Users/91939/Desktop/onebox/DEPLOYMENT.md).
