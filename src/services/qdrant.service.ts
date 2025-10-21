@@ -10,9 +10,20 @@ export class QdrantService {
   private embeddingModel: any;
 
   constructor() {
+    // Debug logging to see what values are being read
+    console.log('Qdrant config:', {
+      host: AppConfig.qdrant.host,
+      port: AppConfig.qdrant.port,
+      apiKeyExists: !!AppConfig.qdrant.apiKey,
+      apiKeyLength: AppConfig.qdrant.apiKey ? AppConfig.qdrant.apiKey.length : 0
+    });
+    
     // Use HTTPS for Qdrant Cloud
     const protocol = AppConfig.qdrant.host.includes('cloud.qdrant.io') ? 'https' : 'http';
     this.baseUrl = `${protocol}://${AppConfig.qdrant.host}:${AppConfig.qdrant.port}`;
+    
+    console.log('Qdrant base URL:', this.baseUrl);
+    
     this.genAI = new GoogleGenerativeAI(AppConfig.gemini.apiKey);
     // Use embedding model for generating embeddings
     this.embeddingModel = this.genAI.getGenerativeModel({ model: 'embedding-001' });
@@ -31,6 +42,7 @@ export class QdrantService {
         };
       }
       
+      console.log('Testing Qdrant connection to:', `${this.baseUrl}/collections`);
       await axios.get(`${this.baseUrl}/collections`, config);
       this.isConnected = true;
       console.log('Qdrant connection established');
