@@ -2,138 +2,124 @@
 
 ## Prerequisites
 
-1. A Heroku account (for Heroku deployment)
-2. A Render account (for Render deployment)
-3. A GitHub account
-4. Access to managed Elasticsearch and Qdrant services (or self-hosted instances)
+1. A Render account (for Render deployment)
+2. A GitHub account
+3. Access to managed Elasticsearch and Qdrant services (Elastic Cloud and Qdrant Cloud recommended)
+4. A Google Gemini API key
 
-## Deployment Steps
+## Cloud Service Setup
 
-### 1. Prepare Environment Variables
+### 1. Elasticsearch Cloud Setup
+
+1. Sign up for [Elastic Cloud](https://cloud.elastic.co/)
+2. Create a new deployment
+3. Note down the following information:
+   - Cloud ID (found in your deployment overview)
+   - Username and password for authentication
+   - Elasticsearch endpoint URL
+
+### 2. Qdrant Cloud Setup
+
+1. Sign up for [Qdrant Cloud](https://qdrant.tech/cloud/)
+2. Create a new cluster
+3. Note down the following information:
+   - Cluster URL (e.g., https://xxxxxxxxxxx.cloud.qdrant.io)
+   - API key for authentication
+
+## Environment Variables
 
 Before deploying, you'll need to configure the following environment variables in your deployment platform:
 
 ```env
-# IMAP Configuration
+# IMAP Configuration - Account 1 (Required)
 IMAP_HOST_1=imap.gmail.com
 IMAP_PORT_1=993
-IMAP_USER_1=your-email@gmail.com
-IMAP_PASSWORD_1=your-app-password
+IMAP_USER_1=your-email-1@gmail.com
+IMAP_PASS_1=your-app-password-1
 IMAP_FOLDER_1=INBOX
 IMAP_TLS_1=true
 
+# IMAP Configuration - Account 2 (Optional)
 IMAP_HOST_2=imap.gmail.com
 IMAP_PORT_2=993
-IMAP_USER_2=your-second-email@gmail.com
-IMAP_PASSWORD_2=your-second-app-password
+IMAP_USER_2=your-email-2@gmail.com
+IMAP_PASS_2=your-app-password-2
 IMAP_FOLDER_2=INBOX
 IMAP_TLS_2=true
 
-# Elasticsearch Configuration (use managed service)
-ELASTICSEARCH_HOST=your-elasticsearch-host
-ELASTICSEARCH_PORT=9200
+# Elasticsearch Configuration (Cloud ID method - Recommended)
+ELASTICSEARCH_CLOUD_ID=your-cloud-id
+ELASTICSEARCH_USERNAME=your-username
+ELASTICSEARCH_PASSWORD=your-password
 
-# Qdrant Configuration (use managed service)
-QDRANT_HOST=your-qdrant-host
+# Alternative Elasticsearch Configuration (Host/Port method)
+# ELASTICSEARCH_HOST=your-elasticsearch-host
+# ELASTICSEARCH_PORT=9200
+
+# Qdrant Configuration (Cloud method - Recommended)
+QDRANT_HOST=your-cluster-id.cloud.qdrant.io
 QDRANT_PORT=6333
+QDRANT_API_KEY=your-api-key
 
-# Gemini API Configuration
+# Alternative Qdrant Configuration (Local/Host method)
+# QDRANT_HOST=localhost
+# QDRANT_PORT=6333
+
+# Gemini API Configuration (Required)
 GEMINI_API_KEY=your-gemini-api-key
 
 # Optional Webhook URLs
-SLACK_WEBHOOK_URL=your-slack-webhook-url
-EXTERNAL_WEBHOOK_URL=your-external-webhook-url
+SLACK_WEBHOOK_URL=https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK
+EXTERNAL_WEBHOOK_URL=https://your-external-service.com/webhook
 ```
 
-### 2. Deploy to Heroku using Git
-
-1. Install the Heroku CLI: https://devcenter.heroku.com/articles/heroku-cli
-2. Log in to Heroku CLI:
-   ```bash
-   heroku login
-   ```
-3. Create a new Heroku app:
-   ```bash
-   heroku create your-app-name
-   ```
-4. Set environment variables:
-   ```bash
-   heroku config:set IMAP_HOST_1=imap.gmail.com
-   heroku config:set IMAP_PORT_1=993
-   # ... set all other environment variables
-   ```
-5. Deploy the application:
-   ```bash
-   git push heroku main
-   ```
-
-### 3. Alternative: Deploy using Heroku Container Registry (for Docker)
-
-If you prefer to use Docker:
-
-1. Log in to Heroku Container Registry:
-   ```bash
-   heroku container:login
-   ```
-2. Create a new Heroku app:
-   ```bash
-   heroku create your-app-name
-   ```
-3. Push the Docker image:
-   ```bash
-   heroku container:push web
-   ```
-4. Release the image:
-   ```bash
-   heroku container:release web
-   ```
-
-### 4. Deploy to Render
+## Deploy to Render
 
 Render is a unified cloud platform that makes it easy to build and run all your apps and websites with free TLS certificates, a global CDN, DDoS protection, private networks, and auto-deploys from Git.
 
-#### Prerequisites for Render
+### Prerequisites for Render
 
 1. Create a Render account at [render.com](https://render.com)
 2. Connect your GitHub account to Render
-3. Set up managed services for Elasticsearch and Qdrant (see below)
+3. Set up managed services for Elasticsearch and Qdrant as described above
 
-#### Deployment Steps for Render
+### Deployment Steps for Render
 
-1. **Prepare External Services**:
-   - For Elasticsearch, sign up for [Elastic Cloud](https://cloud.elastic.co/) or use another managed service
-   - For Qdrant, sign up for [Qdrant Cloud](https://qdrant.tech/cloud/) or use another managed service
-
-2. **Fork or Push Your Repository**:
+1. **Fork or Push Your Repository**:
    - Fork this repository to your GitHub account or push it to a new GitHub repository
 
-3. **Deploy to Render**:
+2. **Deploy to Render**:
    - Go to your Render Dashboard
    - Click "New +" and select "Web Service"
    - Connect your GitHub repository
    - Configure the service:
      - Name: `reachinbox-onebox-ai`
      - Environment: `Node`
-     - Build Command: `npm run build`
+     - Build Command: `npm ci && npm run build`
      - Start Command: `npm start`
      - Instance Type: `Starter` (or higher for production)
 
-4. **Configure Environment Variables**:
+3. **Configure Environment Variables**:
    In the Render dashboard, go to your service settings and add all environment variables:
-   - `IMAP_HOST_1`, `IMAP_PORT_1`, `IMAP_USER_1`, `IMAP_PASSWORD_1`, etc.
-   - `ELASTICSEARCH_HOST` and `ELASTICSEARCH_PORT` (from your managed service)
-   - `QDRANT_HOST` and `QDRANT_PORT` (from your managed service)
-   - `GEMINI_API_KEY`
+   - `IMAP_HOST_1`, `IMAP_PORT_1`, `IMAP_USER_1`, `IMAP_PASS_1`, etc.
+   - `ELASTICSEARCH_CLOUD_ID`, `ELASTICSEARCH_USERNAME`, `ELASTICSEARCH_PASSWORD` (from your Elastic Cloud service)
+   - `QDRANT_HOST`, `QDRANT_PORT`, `QDRANT_API_KEY` (from your Qdrant Cloud service)
+   - `GEMINI_API_KEY` (from Google Cloud)
    - Optional: `SLACK_WEBHOOK_URL`, `EXTERNAL_WEBHOOK_URL`
+
+4. **Advanced Configuration**:
+   - In the "Advanced" section, you can add health check settings:
+     - Path: `/health`
+     - Interval: `30` seconds
 
 5. **Deploy**:
    - Click "Create Web Service"
    - Render will automatically build and deploy your application
    - The application will be available at `https://your-app-name.onrender.com`
 
-## Render-Specific Configuration
+### Render-Specific Configuration
 
-### Environment Variables on Render
+#### Environment Variables on Render
 
 Render allows you to set environment variables in the dashboard:
 1. Go to your service in the Render dashboard
@@ -141,7 +127,7 @@ Render allows you to set environment variables in the dashboard:
 3. Add each variable from your [.env](file:///C:/Users/91939/Desktop/onebox/.env) file with the appropriate values
 4. Make sure to use the connection details for your managed Elasticsearch and Qdrant services
 
-### Important Render Configuration
+#### Important Render Configuration
 
 Render automatically sets the `PORT` environment variable, which your application already respects.
 
@@ -149,7 +135,7 @@ For persistent connections to work properly on Render:
 - Use the "Starter" tier or higher (free tier may restart your application periodically)
 - Consider adding a cron job to periodically check and re-establish IMAP connections if needed
 
-### Render Service Configuration
+#### Render Service Configuration
 
 Your application includes a [render.yaml](file:///C:/Users/91939/Desktop/onebox/render.yaml) file that defines the service configuration:
 
@@ -165,11 +151,13 @@ services:
         value: 20
       - key: PORT
         value: 3000
+    healthCheckPath: /health
+    healthCheckIntervalSeconds: 30
 ```
 
 This configuration tells Render how to build and run your application.
 
-### Auto-Deploy with Render
+#### Auto-Deploy with Render
 
 Render automatically deploys your application when you push changes to your connected GitHub repository. To set this up:
 
@@ -177,7 +165,7 @@ Render automatically deploys your application when you push changes to your conn
 2. Configure auto-deploy in the Render dashboard
 3. Any push to the main branch will trigger a new deployment
 
-### Custom Domain on Render
+#### Custom Domain on Render
 
 To use a custom domain with your Render application:
 
@@ -186,7 +174,7 @@ To use a custom domain with your Render application:
 3. Add your domain name
 4. Follow the instructions to configure DNS records with your domain provider
 
-### SSL Certificates
+#### SSL Certificates
 
 Render automatically provides free SSL certificates for all services with custom domains. No additional configuration is needed.
 
@@ -194,13 +182,13 @@ Render automatically provides free SSL certificates for all services with custom
 
 ### Elasticsearch
 You can use:
-1. Elastic Cloud (https://cloud.elastic.co/)
+1. Elastic Cloud (https://cloud.elastic.co/) - Recommended
 2. AWS Elasticsearch Service
 3. Self-hosted Elasticsearch
 
 ### Qdrant
 You can use:
-1. Qdrant Cloud (https://qdrant.tech/cloud/)
+1. Qdrant Cloud (https://qdrant.tech/cloud/) - Recommended
 2. Self-hosted Qdrant
 
 ## Notes
@@ -352,12 +340,26 @@ Create a [.env.production](file:///C:/Users/91939/Desktop/onebox/.env.production
 IMAP_HOST_1=imap.yourcompany.com
 IMAP_PORT_1=993
 IMAP_USER_1=service-account@yourcompany.com
-IMAP_PASSWORD_1=your-production-password
+IMAP_PASS_1=your-production-password
 IMAP_FOLDER_1=INBOX
 
-# Elasticsearch Configuration
-ELASTICSEARCH_HOST=your-production-elasticsearch-host
-ELASTICSEARCH_PORT=9200
+# Elasticsearch Configuration (Cloud ID method - Recommended)
+ELASTICSEARCH_CLOUD_ID=your-cloud-id
+ELASTICSEARCH_USERNAME=your-username
+ELASTICSEARCH_PASSWORD=your-password
+
+# Alternative Elasticsearch Configuration (Host/Port method)
+# ELASTICSEARCH_HOST=your-production-elasticsearch-host
+# ELASTICSEARCH_PORT=9200
+
+# Qdrant Configuration (Cloud method - Recommended)
+QDRANT_HOST=your-cluster-id.cloud.qdrant.io
+QDRANT_PORT=6333
+QDRANT_API_KEY=your-api-key
+
+# Alternative Qdrant Configuration (Local/Host method)
+# QDRANT_HOST=localhost
+# QDRANT_PORT=6333
 
 # Gemini API Configuration
 GEMINI_API_KEY=your-production-api-key
@@ -367,10 +369,6 @@ SLACK_WEBHOOK_URL=https://hooks.slack.com/services/YOUR/PRODUCTION/WEBHOOK
 
 # External Webhook Configuration
 EXTERNAL_WEBHOOK_URL=https://your-internal-system.com/webhook
-
-# Qdrant Configuration
-QDRANT_HOST=your-production-qdrant-host
-QDRANT_PORT=6333
 
 # Server Configuration
 PORT=3000
