@@ -3,6 +3,13 @@ import { Email, EmailCategory, AICategorizationResult } from '../types/email.typ
 import { AppConfig } from '../config/app.config';
 import fs from 'fs';
 import path from 'path';
+import crypto from 'crypto';
+
+// Define cache entry type
+interface SummaryCacheEntry {
+  summary: string;
+  timestamp: number;
+}
 
 export class AIService {
   private genAI: GoogleGenerativeAI | undefined;
@@ -11,11 +18,14 @@ export class AIService {
   private sentimentModel: any; // For sentiment analysis
   private intentModel: any; // For intent classification
   private feedbackFilePath: string = '';
+  private summaryCacheFilePath: string = '';
   private isValidKey: boolean = true;
   private requestCount: number = 0;
   private lastRequestTime: number = 0;
   private requestLimit: number = 15; // Limit requests per minute
   private requestWindow: number = 60000; // 1 minute in milliseconds
+  private summaryCache: Map<string, SummaryCacheEntry> = new Map();
+  private cacheExpiry: number = 24 * 60 * 60 * 1000; // 24 hours
 
   constructor() {
     // Validate API key
@@ -35,18 +45,64 @@ export class AIService {
       this.sentimentModel = this.genAI.getGenerativeModel({ model: 'gemini-2.0-flash-001' });
       this.intentModel = this.genAI.getGenerativeModel({ model: 'gemini-2.0-flash-001' });
       
-      // Set up feedback file path
+      // Set up file paths
       this.feedbackFilePath = path.join(__dirname, '../../data/ai_feedback.json');
+      this.summaryCacheFilePath = path.join(__dirname, '../../data/summary_cache.json');
       
       // Ensure data directory exists
       const dataDir = path.dirname(this.feedbackFilePath);
       if (!fs.existsSync(dataDir)) {
         fs.mkdirSync(dataDir, { recursive: true });
       }
+      
+      // Load summary cache from file
+      this.loadSummaryCache();
     } catch (error) {
       console.error('Error initializing Gemini AI:', error);
       this.isValidKey = false;
     }
+  }
+
+  private async loadSummaryCache(): Promise<void> {
+    try {
+      if (fs.existsSync(this.summaryCacheFilePath)) {
+        const fileContent = fs.readFileSync(this.summaryCacheFilePath, 'utf8');
+        const cachedData = JSON.parse(fileContent || '{}');
+        const now = Date.now();
+        
+        // Load cache entries that haven't expired
+        for (const [key, value] of Object.entries(cachedData)) {
+          if (value && typeof value === 'object' && 'timestamp' in value && typeof value.timestamp === 'number') {
+            const entry = value as SummaryCacheEntry;
+            if ((now - entry.timestamp) < this.cacheExpiry) {
+              this.summaryCache.set(key, entry);
+            }
+          }
+        }
+        
+        console.log(`Loaded ${this.summaryCache.size} entries from summary cache`);
+      }
+    } catch (error) {
+      console.warn('Error loading summary cache:', error);
+    }
+  }
+
+  private async saveSummaryCache(): Promise<void> {
+    try {
+      const cacheObject: Record<string, SummaryCacheEntry> = {};
+      for (const [key, value] of this.summaryCache.entries()) {
+        cacheObject[key] = value;
+      }
+      fs.writeFileSync(this.summaryCacheFilePath, JSON.stringify(cacheObject, null, 2));
+    } catch (error) {
+      console.warn('Error saving summary cache:', error);
+    }
+  }
+
+  private getEmailHash(email: Email): string {
+    // Create a hash of the email content to use as cache key
+    const content = `${email.subject}|${email.from}|${email.to}|${email.body}`;
+    return crypto.createHash('md5').update(content).digest('hex');
   }
 
   private async checkRateLimit(): Promise<boolean> {
@@ -341,12 +397,27 @@ export class AIService {
 
   // Method to generate email summary using AI
   public async summarizeEmail(email: Email): Promise<string> {
+    // Check if we have a cached summary
+    const emailHash = this.getEmailHash(email);
+    const cachedEntry = this.summaryCache.get(emailHash);
+    const now = Date.now();
+    
+    if (cachedEntry && (now - cachedEntry.timestamp) < this.cacheExpiry) {
+      // Return cached summary
+      console.log(`Using cached summary for email: ${email.subject}`);
+      return cachedEntry.summary;
+    }
+    
     // Check rate limit
     await this.checkRateLimit();
     
     if (!this.isValidKey || !this.genAI) {
       // Fallback to simple summarization
-      return this.simpleSummarize(email.body, email.subject);
+      const summary = this.simpleSummarize(email.body, email.subject);
+      // Cache the summary
+      this.summaryCache.set(emailHash, { summary, timestamp: now });
+      await this.saveSummaryCache();
+      return summary;
     }
     
     // Implement retry logic with exponential backoff for rate limiting
@@ -370,11 +441,16 @@ export class AIService {
         const summary = response.text().trim();
         
         // Ensure summary is not too long
+        let finalSummary = summary;
         if (summary.length > 100) {
-          return summary.substring(0, 97) + '...';
+          finalSummary = summary.substring(0, 97) + '...';
         }
         
-        return summary;
+        // Cache the summary
+        this.summaryCache.set(emailHash, { summary: finalSummary, timestamp: now });
+        await this.saveSummaryCache();
+        
+        return finalSummary;
       } catch (error: any) {
         // Check if this is a rate limiting error
         if (error.message && (error.message.includes('429') || error.message.includes('quota')) && retries < maxRetries) {
@@ -398,14 +474,22 @@ export class AIService {
         } else {
           console.error('Error summarizing email with AI:', error);
           // Fallback to simple summarization
-          return this.simpleSummarize(email.body, email.subject);
+          const summary = this.simpleSummarize(email.body, email.subject);
+          // Cache the summary
+          this.summaryCache.set(emailHash, { summary, timestamp: now });
+          await this.saveSummaryCache();
+          return summary;
         }
       }
     }
     
     // If we've exhausted retries, fallback to simple summarization
     console.error('Exhausted retries for email summarization. Using simple summarization.');
-    return this.simpleSummarize(email.body, email.subject);
+    const summary = this.simpleSummarize(email.body, email.subject);
+    // Cache the summary
+    this.summaryCache.set(emailHash, { summary, timestamp: now });
+    await this.saveSummaryCache();
+    return summary;
   }
 
   // Simple summarization as fallback
