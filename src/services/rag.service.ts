@@ -9,6 +9,12 @@ export class RAGService {
   private qdrantService: QdrantService;
 
   constructor() {
+    // Add debug logging
+    console.log('Initializing RAG service with Qdrant config:', {
+      qdrantHost: AppConfig.qdrant.host,
+      qdrantPort: AppConfig.qdrant.port
+    });
+    
     this.genAI = new GoogleGenerativeAI(AppConfig.gemini.apiKey);
     this.model = this.genAI.getGenerativeModel({ model: 'gemini-2.0-flash-001' });
     // Use embedding model for generating embeddings
