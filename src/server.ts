@@ -60,6 +60,30 @@ console.log('Registering email routes...');
 app.use('/api/emails', emailRoutes);
 console.log('Email routes registered successfully');
 
+// Services - Initialize in proper order
+console.log('Initializing services...');
+const imapService = new ImapService();
+const elasticsearchService = new ElasticsearchService();
+
+// Initialize RAG service (which includes Qdrant) after config is loaded
+let ragService: any = null;
+let qdrantService: any = null;
+
+try {
+  // Import RAG service dynamically to ensure config is loaded
+  const { RAGService } = require('./services/rag.service');
+  ragService = new RAGService();
+  // Access the qdrantService from RAG service
+  qdrantService = ragService['qdrantService'];
+  console.log('RAG and Qdrant services initialized successfully');
+} catch (error) {
+  console.error('Failed to initialize RAG service:', error);
+}
+
+const aiService = new AIService();
+const webhookService = new WebhookService();
+const scheduledProcessor = new ScheduledProcessor();
+
 // Health check endpoint
 app.get('/health', (req: Request, res: Response) => {
   res.json({ 
@@ -87,30 +111,6 @@ app.use(express.static('public'));
 app.get('/', (req: Request, res: Response) => {
   res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
 });
-
-// Services - Initialize in proper order
-console.log('Initializing services...');
-const imapService = new ImapService();
-const elasticsearchService = new ElasticsearchService();
-
-// Initialize RAG service (which includes Qdrant) after config is loaded
-let ragService: any = null;
-let qdrantService: any = null;
-
-try {
-  // Import RAG service dynamically to ensure config is loaded
-  const { RAGService } = require('./services/rag.service');
-  ragService = new RAGService();
-  // Access the qdrantService from RAG service
-  qdrantService = ragService['qdrantService'];
-  console.log('RAG and Qdrant services initialized successfully');
-} catch (error) {
-  console.error('Failed to initialize RAG service:', error);
-}
-
-const aiService = new AIService();
-const webhookService = new WebhookService();
-const scheduledProcessor = new ScheduledProcessor();
 
 // Handle new emails from IMAP
 imapService.on('newEmail', async (email: Email) => {
