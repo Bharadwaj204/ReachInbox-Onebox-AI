@@ -4,7 +4,7 @@
   "description": "AI-powered email aggregator similar to ReachInbox",
   "main": "dist/server.js",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc --project tsconfig.json",
     "start": "node dist/server.js",
     "dev": "ts-node src/server.ts",
     "test": "jest",
@@ -39,6 +39,6 @@
     "typescript": "^5.3.3"
   },
   "engines": {
-    "node": "18.x"
+    "node": "20.x"
   }
 }
