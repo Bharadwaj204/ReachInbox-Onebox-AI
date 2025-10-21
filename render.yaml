@@ -9,3 +9,5 @@ services:
         value: 20
       - key: PORT
         value: 3000
+    healthCheckPath: /health
+    healthCheckIntervalSeconds: 30
