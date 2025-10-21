@@ -73,6 +73,12 @@ export class QdrantService {
   }
 
   public async initializeCollection(): Promise<void> {
+    // Check if service is properly initialized
+    if (!this.genAI || !this.baseUrl) {
+      console.warn('Qdrant service not properly initialized. Skipping collection initialization.');
+      return;
+    }
+
     if (!this.isConnected) {
       console.warn('Qdrant not connected. Skipping collection initialization.');
       return;
@@ -108,6 +114,12 @@ export class QdrantService {
   }
 
   private async getCollections(): Promise<string[]> {
+    // Check if service is properly initialized
+    if (!this.genAI || !this.baseUrl) {
+      console.warn('Qdrant service not properly initialized. Returning empty collections.');
+      return [];
+    }
+
     if (!this.isConnected) {
       return [];
     }
@@ -130,6 +142,12 @@ export class QdrantService {
   }
 
   public async addProductData(id: string, text: string, metadata: any): Promise<void> {
+    // Check if service is properly initialized
+    if (!this.genAI || !this.baseUrl) {
+      console.warn('Qdrant service not properly initialized. Skipping product data addition.');
+      return;
+    }
+
     if (!this.isConnected) {
       console.warn('Qdrant not connected. Skipping product data addition.');
       return;
@@ -167,6 +185,12 @@ export class QdrantService {
   }
 
   public async searchSimilarProducts(query: string, limit: number = 5): Promise<any[]> {
+    // Check if service is properly initialized
+    if (!this.genAI || !this.baseUrl) {
+      console.warn('Qdrant service not properly initialized. Returning empty results.');
+      return [];
+    }
+
     if (!this.isConnected) {
       console.warn('Qdrant not connected. Search not available.');
       return [];
@@ -199,6 +223,13 @@ export class QdrantService {
   }
 
   private async generateEmbedding(text: string): Promise<number[]> {
+    // Check if service is properly initialized
+    if (!this.genAI) {
+      console.warn('Qdrant service not properly initialized. Returning random embedding.');
+      // Return a placeholder array of the correct size
+      return Array(768).fill(0).map(() => Math.random());
+    }
+
     try {
       // Use Gemini embedding API
       const result = await this.embeddingModel.embedContent(text);
