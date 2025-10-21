@@ -3,13 +3,21 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { AppConfig } from '../config/app.config';
 
 export class QdrantService {
-  private baseUrl: string;
+  private baseUrl: string = '';
   private collectionName: string = 'product_data';
   private isConnected: boolean = false;
-  private genAI: GoogleGenerativeAI;
+  private genAI: GoogleGenerativeAI | null = null;
   private embeddingModel: any;
 
   constructor() {
+    // Add a small delay to ensure environment variables are loaded
+    this.initializeService();
+  }
+
+  private async initializeService(): Promise<void> {
+    // Wait a bit for environment variables to be fully loaded
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
     // Debug logging to see what values are being read
     console.log('Qdrant config:', {
       host: AppConfig.qdrant.host,
@@ -38,6 +46,13 @@ export class QdrantService {
   }
 
   private async testConnection(): Promise<void> {
+    // Check if genAI is initialized
+    if (!this.genAI) {
+      console.warn('Qdrant service not properly initialized. Skipping connection test.');
+      this.isConnected = false;
+      return;
+    }
+
     try {
       // Configure axios with API key if available
       const config: any = {};
