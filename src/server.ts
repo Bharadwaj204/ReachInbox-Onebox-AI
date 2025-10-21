@@ -11,9 +11,24 @@ console.log('File exists:', require('fs').existsSync(resolve(__dirname, '../.env
 console.log('Environment Variables:');
 console.log('ELASTICSEARCH_HOST:', process.env.ELASTICSEARCH_HOST);
 console.log('ELASTICSEARCH_PORT:', process.env.ELASTICSEARCH_PORT);
+console.log('ELASTICSEARCH_CLOUD_ID:', process.env.ELASTICSEARCH_CLOUD_ID);
+console.log('ELASTICSEARCH_USERNAME:', process.env.ELASTICSEARCH_USERNAME);
+console.log('ELASTICSEARCH_PASSWORD:', process.env.ELASTICSEARCH_PASSWORD);
 console.log('QDRANT_HOST:', process.env.QDRANT_HOST);
 console.log('QDRANT_PORT:', process.env.QDRANT_PORT);
+console.log('QDRANT_API_KEY exists:', !!process.env.QDRANT_API_KEY);
 console.log('GEMINI_API_KEY exists:', !!process.env.GEMINI_API_KEY);
+
+// Add debug logging for all IMAP variables
+console.log('IMAP Variables:');
+console.log('IMAP_HOST_1:', process.env.IMAP_HOST_1);
+console.log('IMAP_PORT_1:', process.env.IMAP_PORT_1);
+console.log('IMAP_USER_1:', process.env.IMAP_USER_1);
+console.log('IMAP_PASSWORD_1 exists:', !!process.env.IMAP_PASSWORD_1);
+console.log('IMAP_HOST_2:', process.env.IMAP_HOST_2);
+console.log('IMAP_PORT_2:', process.env.IMAP_PORT_2);
+console.log('IMAP_USER_2:', process.env.IMAP_USER_2);
+console.log('IMAP_PASSWORD_2 exists:', !!process.env.IMAP_PASSWORD_2);
 
 import express, { Request, Response } from 'express';
 import path from 'path';
@@ -28,6 +43,11 @@ import { AppConfig } from './config/app.config';
 
 // Debug the imported routes
 console.log('Email routes type:', typeof emailRoutes);
+console.log('AppConfig values:', {
+  elasticsearch: AppConfig.elasticsearch,
+  qdrant: AppConfig.qdrant,
+  gemini: AppConfig.gemini
+});
 
 const app = express();
 const port = AppConfig.server.port;
