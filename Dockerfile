@@ -1,5 +1,5 @@
-# Use Node.js LTS version
-FROM node:18-alpine
+# Use Node.js 20 (required by cheerio and undici)
+FROM node:20-alpine
 
 # Set working directory
 WORKDIR /app
@@ -7,14 +7,17 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci --only=production
+# Install all dependencies (including dev)
+RUN npm ci
 
-# Copy source code
+# Copy the rest of the application source
 COPY . .
 
 # Build TypeScript
 RUN npm run build
+
+# Remove dev dependencies to slim down the image
+RUN npm prune --production
 
 # Expose port
 EXPOSE 3000
