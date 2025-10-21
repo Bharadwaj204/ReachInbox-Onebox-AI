@@ -7,6 +7,9 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
+# Copy configuration files needed for build
+COPY tsconfig.json ./
+
 # Install all dependencies (including dev)
 RUN npm ci
 
