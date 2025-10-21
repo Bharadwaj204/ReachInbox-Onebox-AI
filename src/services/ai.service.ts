@@ -125,13 +125,14 @@ export class AIService {
           if (retryMatch) {
             const retrySeconds = parseFloat(retryMatch[1]);
             delayMs = Math.max(delayMs, retrySeconds * 1000);
+          } else {
+            // If no specific delay mentioned, use exponential backoff
+            delayMs = Math.min(delayMs * 2 + Math.random() * 1000, 30000); // Cap at 30 seconds
           }
           
           // Wait before retrying
           await this.delay(delayMs);
           
-          // Exponential backoff with jitter
-          delayMs = Math.min(delayMs * 2 + Math.random() * 1000, 10000); // Cap at 10 seconds
           retries++;
           continue;
         } else {
@@ -348,31 +349,63 @@ export class AIService {
       return this.simpleSummarize(email.body, email.subject);
     }
     
-    try {
-      const prompt = `
-        Summarize the following email in one concise sentence (maximum 100 characters):
+    // Implement retry logic with exponential backoff for rate limiting
+    const maxRetries = 3;
+    let retries = 0;
+    let delayMs = 1000; // Start with 1 second delay
+    
+    while (retries <= maxRetries) {
+      try {
+        const prompt = `
+          Summarize the following email in one concise sentence (maximum 100 characters):
+          
+          Subject: ${email.subject}
+          Body: ${email.body}
+          
+          Summary:
+        `;
         
-        Subject: ${email.subject}
-        Body: ${email.body}
+        const result = await this.model.generateContent(prompt);
+        const response = await result.response;
+        const summary = response.text().trim();
         
-        Summary:
-      `;
-      
-      const result = await this.model.generateContent(prompt);
-      const response = await result.response;
-      const summary = response.text().trim();
-      
-      // Ensure summary is not too long
-      if (summary.length > 100) {
-        return summary.substring(0, 97) + '...';
+        // Ensure summary is not too long
+        if (summary.length > 100) {
+          return summary.substring(0, 97) + '...';
+        }
+        
+        return summary;
+      } catch (error: any) {
+        // Check if this is a rate limiting error
+        if (error.message && (error.message.includes('429') || error.message.includes('quota')) && retries < maxRetries) {
+          console.warn(`Rate limit hit during email summarization. Retry ${retries + 1}/${maxRetries} in ${delayMs}ms`);
+          
+          // Extract retry delay from error message if available
+          const retryMatch = error.message.match(/Please retry in ([\d.]+)s/);
+          if (retryMatch) {
+            const retrySeconds = parseFloat(retryMatch[1]);
+            delayMs = Math.max(delayMs, retrySeconds * 1000);
+          } else {
+            // If no specific delay mentioned, use exponential backoff
+            delayMs = Math.min(delayMs * 2 + Math.random() * 1000, 30000); // Cap at 30 seconds
+          }
+          
+          // Wait before retrying
+          await this.delay(delayMs);
+          
+          retries++;
+          continue;
+        } else {
+          console.error('Error summarizing email with AI:', error);
+          // Fallback to simple summarization
+          return this.simpleSummarize(email.body, email.subject);
+        }
       }
-      
-      return summary;
-    } catch (error) {
-      console.error('Error summarizing email with AI:', error);
-      // Fallback to simple summarization
-      return this.simpleSummarize(email.body, email.subject);
     }
+    
+    // If we've exhausted retries, fallback to simple summarization
+    console.error('Exhausted retries for email summarization. Using simple summarization.');
+    return this.simpleSummarize(email.body, email.subject);
   }
 
   // Simple summarization as fallback
