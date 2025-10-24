@@ -85,6 +85,14 @@ The project includes a comprehensive Docker Compose setup that runs all services
    IMAP_FOLDER_2=INBOX
    IMAP_TLS_2=true
 
+   # Elasticsearch Configuration
+   ELASTICSEARCH_HOST=localhost
+   ELASTICSEARCH_PORT=9200
+
+   # Qdrant Configuration
+   QDRANT_HOST=localhost
+   QDRANT_PORT=6333
+
    # Gemini API Configuration
    GEMINI_API_KEY=your-gemini-api-key
 
@@ -177,16 +185,32 @@ IMAP_TLS_2=true
 
 ### Elasticsearch Configuration
 
+For local development:
 ```
 ELASTICSEARCH_HOST=localhost
 ELASTICSEARCH_PORT=9201
 ```
 
+For cloud deployment (Elastic Cloud):
+```
+ELASTICSEARCH_CLOUD_ID=your-cloud-id
+ELASTICSEARCH_USERNAME=your-username
+ELASTICSEARCH_PASSWORD=your-password
+```
+
 ### Qdrant Configuration
 
+For local development:
 ```
 QDRANT_HOST=localhost
 QDRANT_PORT=6335
+```
+
+For cloud deployment (Qdrant Cloud):
+```
+QDRANT_HOST=your-cluster-id.cloud.qdrant.io
+QDRANT_PORT=6333
+QDRANT_API_KEY=your-api-key
 ```
 
 ### Gemini API Configuration
